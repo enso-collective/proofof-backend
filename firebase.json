@@ -15,8 +15,11 @@
       ]
     }
   ],
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  }
+  "firestore": [
+    {
+      "database": "staging",
+      "indexes": "firestore.indexes.staging.json",
+      "rules": "firestore.staging.rules"
+    }
+  ]
 }
