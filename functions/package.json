@@ -3,20 +3,20 @@
   "scripts": {
     "lint": "yarn lint:code && yarn lint:formatting",
 		"lint:fix": "yarn lint:code:fix && yarn lint:formatting:fix",
-		"lint:code": "eslint",
-		"lint:code:fix": "eslint --fix",
+		"lint:code": "eslint .",
+		"lint:code:fix": "eslint . --fix",
 		"lint:formatting": "prettier . --check",
 		"lint:formatting:fix": "prettier . --write --log-level=silent",
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "serve": "npm run build && firebase emulators:start --only functions",
+    "serve": "npm run build && firebase emulators:start --only functions,firestore",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
   },
   "engines": {
-    "node": "16"
+    "node": "18"
   },
   "main": "lib/index.js",
   "dependencies": {
