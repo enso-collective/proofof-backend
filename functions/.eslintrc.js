@@ -17,12 +17,18 @@ module.exports = {
 		sourceType: 'module',
 		tsconfigRootDir: __dirname,
 	},
-	plugins: ['prettier', 'import', 'simple-import-sort', '@typescript-eslint'],
+	plugins: ['import', 'simple-import-sort', '@typescript-eslint', 'prettier'],
 	rules: {
+		// TS Compiler
+		'no-unused-vars': 'off',
+		'require-jsdoc': 'off',
+		// TS Plugin
 		'@typescript-eslint/ban-ts-comment': 'off',
 		'@typescript-eslint/no-explicit-any': 'off',
 		'@typescript-eslint/no-var-requires': 'off',
-		'prettier/prettier': 'off',
+		'@typescript-eslint/no-unused-vars': 'warn',
+		'prettier/prettier': ['error', { singleQuote: true, semi: false }],
+		// Import
 		'import/first': 'error',
 		'import/newline-after-import': 'error',
 		'import/no-duplicates': 'error',
@@ -31,4 +37,12 @@ module.exports = {
 		'simple-import-sort/imports': 'error',
 		'simple-import-sort/exports': 'warn',
 	},
+	overrides: [
+		{
+			files: ['./src/dtos/**/*.ts'],
+			rules: {
+				'new-cap': 'off',
+			},
+		},
+	],
 }

@@ -1,5 +1,6 @@
-import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
+import * as functions from 'firebase-functions'
+
 import { handleServerError, handleServerErrorResponse } from '../utils/handleServerError'
 
 // Constants for Firestore collection names
@@ -42,7 +43,7 @@ export const validateUsername = functions.https.onRequest(async (req, res) => {
  *
  * @param {string} field - The field to check (e.g., 'email', 'username').
  * @param {string} value - The value to check for existence.
- * @returns {Promise<boolean>} A promise that resolves to true if a user with the specified value exists, otherwise false.
+ * @return {Promise<boolean>} A promise that resolves to true if a user with the specified value exists, otherwise false.
  */
 async function checkUserExists(field: string, value: string): Promise<boolean> {
 	try {
