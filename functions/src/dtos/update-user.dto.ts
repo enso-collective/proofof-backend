@@ -1,4 +1,4 @@
-import { IsDate, IsEmail, IsEthereumAddress, IsOptional, IsString } from 'class-validator'
+import { IsDate, IsEthereumAddress, IsOptional, IsString } from 'class-validator'
 
 import { EthereumAddress } from '../types'
 
