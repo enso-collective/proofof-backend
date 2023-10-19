@@ -1,9 +1,17 @@
 // Constants for Firestore collections
-export const COLLECTION_POSTS = 'posts'
-export const COLLECTION_POST_LOCATIONS = 'postLocations'
-export const COLLECTION_BOARDS = 'boards'
-export const COLLECTION_USERS = 'users'
+
+export enum COLLECTIONS {
+	BOARDS = 'boards',
+	POSTS = 'posts',
+	POST_LOCATIONS = 'postLocations',
+	USERS = 'users',
+}
+
+export enum SUBCOLLECTIONS {
+	USER_ACCOUNTS = 'accounts',
+}
 
 // Define constants for account types
-export const ACCOUNT_TYPE_AUTH0 = 'auth0'
 export const ACCOUNT_TYPE_APPLE = 'apple'
+export const ACCOUNT_TYPE_AUTH0 = 'auth0'
+export const ACCOUNT_TYPE_GOOGLE = 'apple'

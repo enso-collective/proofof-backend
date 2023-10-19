@@ -14,5 +14,6 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export { deletePostFromBoards } from './routes/delete'
-export { authWithApple, authWithAuth0, createUserAccount, loginWithWallet } from './routes/login'
+export { authWithApple, authWithAuth0, createUserAccount } from './routes/login'
+export { signupWithEmail, signupWithWallet } from './routes/signup'
 export { validateEmail, validateUsername } from './routes/validation'

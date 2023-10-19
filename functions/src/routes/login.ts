@@ -76,12 +76,11 @@ export const createUserAccount = functions.auth.user().onCreate(async user => {
  */
 export const authWithAuth0 = functions.https.onRequest(async (req, res) => {
 	try {
-		const auth0Token: string = req.body.auth0Token
-		const userInfo = await getUserInfoFromAuth0(auth0Token)
+		const { auth0Token } = req.body
+		if (!auth0Token) throw new Error('No auth token passed')
 
-		if (!userInfo) {
-			throw new Error('No user info')
-		}
+		const userInfo = await auth0.users?.getInfo(req.body.auth0Token)
+		if (!userInfo) throw new Error('No user info')
 
 		const usersCollection = admin.firestore().collection('users')
 		const userSnapshot = await findUserByAccount(
@@ -125,42 +124,6 @@ export const authWithApple = functions.https.onRequest(async (req, res) => {
 			email || '',
 			undefined, // Pass undefined for the user_id
 			appleId,
-		)
-
-		res.json({ firebaseToken: customToken })
-	} catch (error) {
-		handleServerErrorResponse(error, res)
-	}
-})
-
-/**
- * Firebase HTTP Function to authenticate with a wallet and create a Firebase custom token.
- *
- * @param {functions.https.Request} req - The HTTP request object containing wallet information.
- * @param {functions.Response} res - The HTTP response object to send the Firebase custom token.
- */
-export const loginWithWallet = functions.https.onRequest(async (req, res) => {
-	try {
-		const { walletPublicAddress, walletName, namespace, reference } = req.body
-		const label = `${walletName}(${namespace}:${reference})`
-
-		// TODO: check if walletPublicAddress exists in any other user record
-		// if so, return login token
-
-		const usersCollection = admin.firestore().collection('users')
-		const userSnapshot = await findUserByAccount(
-			usersCollection,
-			label, // Use label as user_id for wallet login
-			walletPublicAddress,
-		)
-
-		const customToken = await createOrUpdateUserAndToken(
-			usersCollection,
-			userSnapshot,
-			label,
-			walletPublicAddress,
-			namespace,
-			reference,
 		)
 
 		res.json({ firebaseToken: customToken })

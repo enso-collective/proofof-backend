@@ -1,22 +1,17 @@
 import * as admin from 'firebase-admin'
 import * as functions from 'firebase-functions'
 
-import {
-	COLLECTION_BOARDS,
-	COLLECTION_POST_LOCATIONS,
-	COLLECTION_POSTS,
-	COLLECTION_USERS,
-} from '../constants'
+import { COLLECTIONS } from '../constants'
 import { handleServerError } from '../utils/handleServerError'
 
 export const deletePostFromBoards = functions.firestore
-	.document(`${COLLECTION_POSTS}/{postId}`)
+	.document(`${COLLECTIONS.POSTS}/{postId}`)
 	.onDelete(async (snap, context) => {
 		const postId = context.params.postId
 		const userId = snap.data()?.ownerId
 		const batch = admin.firestore().batch()
 
-		const postLocationRef = admin.firestore().collection(COLLECTION_POST_LOCATIONS).doc(postId)
+		const postLocationRef = admin.firestore().collection(COLLECTIONS.POST_LOCATIONS).doc(postId)
 
 		const postLocationDoc = await postLocationRef.get()
 		const postLocationsDocData = postLocationDoc.data()
@@ -31,8 +26,8 @@ export const deletePostFromBoards = functions.firestore
 		// Function to delete a post from a board and update the lists
 		const deletePostFromBoard = (boardId: string, isPrivate: boolean) => {
 			const collectionPath = isPrivate
-				? `${COLLECTION_USERS}/${userId}/${COLLECTION_BOARDS}`
-				: COLLECTION_BOARDS
+				? `${COLLECTIONS.USERS}/${userId}/${COLLECTIONS.BOARDS}`
+				: COLLECTIONS.BOARDS
 
 			const postRef = admin
 				.firestore()
