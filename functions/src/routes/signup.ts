@@ -7,14 +7,22 @@ import { AuthProvider, UserAccountType } from '../types'
 import { handleServerErrorResponse } from '../utils/handleServerError'
 
 const createUser = async (newUser: CreateUserDto, userAccount: CreateUserAccountDto) => {
-	// 1. Create and save the new user record
+	// 1. Verify that the email is not in use by another user
+	const userSnapshot = await admin
+		.firestore()
+		.collection(COLLECTIONS.USERS)
+		.where('email', '==', newUser.email)
+		.get()
+	if (!userSnapshot.empty) throw Error(`The email '${newUser.email}' is already in use`)
+
+	// 2. Create and save the new user record
 	const userRef = await admin.firestore().collection(COLLECTIONS.USERS).doc()
 	await userRef.set(newUser)
 
-	// 2. Create and save the user account to its 'accounts' subcollection
+	// 3. Create and save the user account to its 'accounts' subcollection
 	await userRef.collection(SUBCOLLECTIONS.USER_ACCOUNTS).add(userAccount)
 
-	// 3. Create and return the JWT relating to the new user record's UID
+	// 4. Create and return the JWT relating to the new user record's UID
 	return admin.auth().createCustomToken(userRef.id)
 }
 
@@ -67,7 +75,7 @@ export const signupWithEmail = functions.https.onRequest(async (req, res) => {
 		// 1. Validate inputs
 		await validateEmailInputs(email, username, authProvider)
 
-		// 2 Construct minimally required data to create a new user and its account
+		// 2. Construct minimally required data to create a new user and its account
 		const userData: CreateUserDto = {
 			createdAt: new Date(),
 			email,
@@ -78,6 +86,7 @@ export const signupWithEmail = functions.https.onRequest(async (req, res) => {
 			type: UserAccountType.Web2,
 			provider: authProvider,
 			value: email,
+			lastLogin: new Date(),
 		}
 
 		// 3. Save the new record to storage
@@ -120,6 +129,7 @@ export const signupWithWallet = functions.https.onRequest(async (req, res) => {
 			type: UserAccountType.Web3,
 			provider: authProvider,
 			value: eoaAddress,
+			lastLogin: new Date(),
 		}
 
 		// 3. Save the new record to storage

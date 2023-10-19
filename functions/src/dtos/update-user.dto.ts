@@ -1,12 +1,8 @@
-import { IsDate, IsEthereumAddress, IsFirebasePushId, IsOptional, IsString } from 'class-validator'
+import { IsDate, IsEmail, IsEthereumAddress, IsOptional, IsString } from 'class-validator'
 
 import { EthereumAddress } from '../types'
 
 export class UpdateUserDto {
-	@IsFirebasePushId({ each: true })
-	@IsOptional()
-	accountIds?: string[]
-
 	@IsString()
 	@IsOptional()
 	avatarUrl?: string
@@ -19,8 +15,20 @@ export class UpdateUserDto {
 	@IsOptional()
 	displayName?: string
 
-	// TODO: allow for updating email in the future
+	// @IsString()
+	// @IsOptional()
+	// firstName?: string
 
+	// @IsString()
+	// @IsOptional()
+	// lastName?: string
+
+	// TODO: allow for updating email in the future
+	// @IsEmail()
+	// @IsOptional()
+	// email?: string;
+
+	// For updating their current logged in account
 	@IsEthereumAddress()
 	@IsOptional()
 	eoaAddress?: EthereumAddress

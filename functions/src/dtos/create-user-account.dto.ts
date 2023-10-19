@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator'
+import { IsDate, IsString } from 'class-validator'
 
 import { AuthProvider, EmailAddress, EthereumAddress, UserAccountType } from '../types'
 
@@ -17,4 +17,7 @@ export class CreateUserAccountDto {
 
 	@IsString()
 	value: EmailAddress | EthereumAddress
+
+	@IsDate()
+	lastLogin: Date
 }

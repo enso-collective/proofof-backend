@@ -1,196 +1,158 @@
-import { AuthenticationClient } from 'auth0'
 import * as admin from 'firebase-admin'
 import * as functions from 'firebase-functions'
 
-import { ACCOUNT_TYPE_APPLE, ACCOUNT_TYPE_AUTH0 } from '../constants'
-import { handleServerError, handleServerErrorResponse } from '../utils/handleServerError'
-
-// Initialize the Auth0 client
-const auth0 = new AuthenticationClient({
-	domain: 'dev-gjtt35jcnaro1wqn.us.auth0.com',
-	clientId: 'N0dyY1AJ7UVluxDlvtN1Nsvc0sW9qHl8',
-})
+import { COLLECTIONS, SUBCOLLECTIONS } from '../constants'
+import { CreateUserAccountDto, UpdateUserAccountDto } from '../dtos'
+import { AuthProvider, UserAccountType } from '../types'
+import { handleServerErrorResponse } from '../utils/handleServerError'
 
 /**
- * Interface representing a JSON Web Token (JWT) payload.
- * @interface
- */
-interface Jwt {
-	sub: string
-	email: string
-	user_id: string
-}
-
-/**
- * Find a user by their account in Firestore.
- *
- * @param {admin.firestore.CollectionReference} usersCollection - Firestore collection reference for users.
- * @param {string} accountType - The type of account (e.g., 'auth0', 'apple', or label for wallet login).
- * @param {string} identifier - The identifier for the account (e.g., user_id, email, or label).
- * @return {Promise<admin.firestore.QuerySnapshot>} A promise that resolves to the Firestore query snapshot.
- */
-async function findUserByAccount(
-	usersCollection: admin.firestore.CollectionReference,
-	accountType: string,
-	identifier: string,
-): Promise<admin.firestore.QuerySnapshot> {
-	return await usersCollection
-		.where(`accounts.${accountType}.${identifier}`, '==', true) // Adjust this condition based on your Firestore structure
-		.get()
-}
-
-/**
- * Firebase Function to create a user account when a new user is created.
- *
- * @param {functions.auth.UserRecord} user - The Firebase user record for the newly created user.
- */
-export const createUserAccount = functions.auth.user().onCreate(async user => {
-	try {
-		const { uid, email, displayName, photoURL } = user
-		const userObject = {
-			uid,
-			email,
-			displayName,
-			photoURL,
-			accounts: {
-				['firebase']: {
-					id: uid,
-					email,
-				},
-			},
-			createdAt: admin.firestore.FieldValue.serverTimestamp(),
-		}
-
-		await admin.firestore().collection('users').doc(uid).set(userObject)
-		console.log(`User account created: ${uid}`)
-	} catch (error) {
-		handleServerError(error)
-	}
-})
-
-/**
- * Firebase HTTP Function to authenticate with Auth0 and create a Firebase custom token.
- *
- * @param {functions.https.Request} req - The HTTP request object containing the Auth0 token.
- * @param {functions.Response} res - The HTTP response object to send the Firebase custom token.
- */
-export const authWithAuth0 = functions.https.onRequest(async (req, res) => {
-	try {
-		const { auth0Token } = req.body
-		if (!auth0Token) throw new Error('No auth token passed')
-
-		const userInfo = await auth0.users?.getInfo(req.body.auth0Token)
-		if (!userInfo) throw new Error('No user info')
-
-		const usersCollection = admin.firestore().collection('users')
-		const userSnapshot = await findUserByAccount(
-			usersCollection,
-			ACCOUNT_TYPE_AUTH0,
-			userInfo.user_id,
-		)
-
-		const customToken = await createOrUpdateUserAndToken(
-			usersCollection,
-			userSnapshot,
-			ACCOUNT_TYPE_AUTH0,
-			userInfo.email,
-			userInfo.user_id,
-		)
-
-		res.json({ firebaseToken: customToken })
-	} catch (error) {
-		handleServerErrorResponse(error, res)
-	}
-})
-
-/**
- * Firebase HTTP Function to authenticate with Apple and create a Firebase custom token.
+ * Firebase HTTP Function to authenticate with an email address and create a Firebase custom token.
  *
  * @param {functions.https.Request} req - The HTTP request object containing Apple ID and email.
  * @param {functions.Response} res - The HTTP response object to send the Firebase custom token.
  */
-export const authWithApple = functions.https.onRequest(async (req, res) => {
+export const loginWithEmail = functions.https.onRequest(async (req, res) => {
 	try {
-		const appleId: string = req.body.appleId
-		const email: string | undefined = req.body.email
+		const { authProvider, email } = req.body
 
-		const usersCollection = admin.firestore().collection('users')
-		const userSnapshot = await findUserByAccount(usersCollection, ACCOUNT_TYPE_APPLE, appleId)
-
-		const customToken = await createOrUpdateUserAndToken(
-			usersCollection,
-			userSnapshot,
-			ACCOUNT_TYPE_APPLE,
-			email || '',
-			undefined, // Pass undefined for the user_id
-			appleId,
+		// Validate inputs
+		if (
+			!email ||
+			!authProvider ||
+			(authProvider !== AuthProvider.Apple &&
+				authProvider !== AuthProvider.Google &&
+				authProvider !== AuthProvider.Auth0)
 		)
+			throw Error('Invalid inputs')
 
-		res.json({ firebaseToken: customToken })
+		// TODO: determine if needing special branch for Auth0 (lookup by email works just fine)
+		// if (authProvider === AuthProvider.Auth0) {
+		// Initialize the Auth0 client
+		// const auth0 = new AuthenticationClient({
+		// 	domain: 'dev-gjtt35jcnaro1wqn.us.auth0.com',
+		// 	clientId: 'N0dyY1AJ7UVluxDlvtN1Nsvc0sW9qHl8',
+		// })
+		// 	const userInfo = await auth0.users?.getInfo(req.body.auth0Token)
+		// 	if (!userInfo) throw new Error('No user info')
+		// }
+
+		// 1. Get user by email. There should only be one user per email based on signup constraints
+		const userSnapshot = await admin
+			.firestore()
+			.collection(COLLECTIONS.USERS)
+			.where('email', '==', email)
+			.get()
+		if (userSnapshot.empty) throw Error(`User with email ${email} could not be found`)
+		const userRef = userSnapshot.docs[0].ref
+
+		// 2. Get the user account related to the auth provider
+		const userAccountSnapshot = await userRef
+			.collection(SUBCOLLECTIONS.USER_ACCOUNTS)
+			.where('provider', '==', authProvider)
+			.get()
+
+		// 3. If exists, update the login time using that account.
+		if (!userAccountSnapshot.empty) {
+			const userAccountRef = userAccountSnapshot.docs[0].ref
+			const updateUserAccountData: UpdateUserAccountDto = {
+				lastLogin: new Date(),
+			}
+			userAccountRef.set(updateUserAccountData, { merge: true })
+		}
+		// 3b. If doesn't exist (first time login), create a new account record for the user
+		else {
+			const userAccount: CreateUserAccountDto = {
+				type: UserAccountType.Web2,
+				provider: authProvider,
+				value: email,
+				lastLogin: new Date(),
+			}
+			await userRef.collection(SUBCOLLECTIONS.USER_ACCOUNTS).add(userAccount)
+		}
+
+		// 4. Create and return the JWT relating to the user record's UID
+		const firebaseToken = await admin.auth().createCustomToken(userRef.id)
+
+		// 5. Return the JWT
+		res.json({ firebaseToken })
 	} catch (error) {
 		handleServerErrorResponse(error, res)
 	}
 })
 
+// TODO: implement
 /**
- * Create or update a user account in Firestore and generate a Firebase custom token.
+ * Firebase HTTP Function to authenticate with a Web3 wallet and create a Firebase custom token.
  *
- * @param {admin.firestore.CollectionReference} usersCollection - Firestore collection reference for users.
- * @param {admin.firestore.QuerySnapshot} userSnapshot - Firestore query snapshot for finding a user.
- * @param {string} uidOrLabel - The Firebase user ID or label.
- * @param {string} email - The user's email address (optional).
- * @param {string} user_id - The user_id (optional).
- * @param {string} appleId - The Apple ID (optional).
- * @return {Promise<string>} A promise that resolves to the Firebase custom token.
+ * @param {functions.https.Request} req - The HTTP request object containing Apple ID and email.
+ * @param {functions.Response} res - The HTTP response object to send the Firebase custom token.
  */
-async function createOrUpdateUserAndToken(
-	usersCollection: admin.firestore.CollectionReference,
-	userSnapshot: admin.firestore.QuerySnapshot,
-	uidOrLabel: string,
-	email?: string,
-	user_id?: string,
-	appleId?: string,
-): Promise<string> {
+export const loginWithWallet = functions.https.onRequest(async (req, res) => {
 	try {
-		const user = {
-			uid: uidOrLabel,
-			createdAt: admin.firestore.FieldValue.serverTimestamp(),
-			accounts: {
-				...(email ? { [uidOrLabel]: { email } } : {}),
-				...(user_id ? { [uidOrLabel]: { auth0Id: user_id } } : {}),
-				...(appleId ? { [uidOrLabel]: { appleId } } : {}),
-			},
+		const { authProvider, email, eoaAddress } = req.body
+
+		// Validate inputs
+		if (
+			!email ||
+			!authProvider ||
+			!eoaAddress ||
+			(authProvider !== AuthProvider.MetaMask && authProvider !== AuthProvider.WalletConnect)
+		)
+			throw Error('Invalid inputs')
+
+		// 1. Get user by email. There should only be one user per email based on signup constraints
+		const userSnapshot = await admin
+			.firestore()
+			.collection(COLLECTIONS.USERS)
+			.where('email', '==', email)
+			.get()
+		if (userSnapshot.empty) throw Error(`User with email ${email} could not be found`)
+		const userRef = userSnapshot.docs[0].ref
+
+		// 2. Get the user account related to the auth provider
+		const userAccountSnapshot = await userRef
+			.collection(SUBCOLLECTIONS.USER_ACCOUNTS)
+			.where('provider', '==', authProvider) // TODO: and eoaAddress is found
+			.get()
+
+		// 3. If exists, update the login time using that account.
+		if (!userAccountSnapshot.empty) {
+			const userAccountRef = userAccountSnapshot.docs[0].ref
+			let updateUserAccountData: UpdateUserAccountDto
+			// TODO: support multiple wallet addresses from the same provider
+			// @ts-ignore
+			if (/* eoaAddress !== userAccountRef.values['eoaAddress']*/ 'false' !== 'comparison') {
+				updateUserAccountData = {
+					value: eoaAddress,
+					lastLogin: new Date(),
+				}
+			} else {
+				updateUserAccountData = {
+					lastLogin: new Date(),
+				}
+			}
+			userAccountRef.set(updateUserAccountData, { merge: true })
+		}
+		// 3b. If doesn't exist (first time login), create a new account record for the user
+		else {
+			const userAccount: CreateUserAccountDto = {
+				type: UserAccountType.Web3,
+				provider: authProvider,
+				value: eoaAddress,
+				lastLogin: new Date(),
+			}
+			await userRef.collection(SUBCOLLECTIONS.USER_ACCOUNTS).add(userAccount)
 		}
 
-		if (!userSnapshot.empty) {
-			const userDoc = userSnapshot.docs[0]
-			// Merge with existing user data
-			await userDoc.ref.set(user, { merge: true })
-		} else {
-			// Create a new user
-			await usersCollection.doc(uidOrLabel).set(user)
-		}
+		// TODO: update the User record's 'eoaAddress' field for the currently logged in address
 
-		// Create and return the Firebase custom token
-		return admin.auth().createCustomToken(uidOrLabel)
-	} catch (error) {
-		handleServerError(error)
-		return ''
-	}
-}
+		// 4. Create and return the JWT relating to the user record's UID
+		const firebaseToken = await admin.auth().createCustomToken(userRef.id)
 
-/**
- * Retrieve user information from Auth0 using the provided token.
- *
- * @param {string} auth0Token - The Auth0 access token.
- * @return {Promise<Jwt | undefined>} A promise that resolves to the user information from Auth0.
- */
-async function getUserInfoFromAuth0(auth0Token: string): Promise<Jwt | undefined> {
-	try {
-		const userInfo = (await auth0.users?.getInfo(auth0Token)) as Jwt | undefined
-		return userInfo
+		// 5. Return the JWT
+		res.json({ firebaseToken })
 	} catch (error) {
-		console.error('Error fetching user info from Auth0:', error)
-		return undefined
+		handleServerErrorResponse(error, res)
 	}
-}
+})
