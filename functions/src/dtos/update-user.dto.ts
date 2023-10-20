@@ -15,13 +15,13 @@ export class UpdateUserDto {
 	@IsOptional()
 	displayName?: string
 
-	// @IsString()
-	// @IsOptional()
-	// firstName?: string
+	@IsString()
+	@IsOptional()
+	firstName?: string
 
-	// @IsString()
-	// @IsOptional()
-	// lastName?: string
+	@IsString()
+	@IsOptional()
+	lastName?: string
 
 	// TODO: allow for updating email in the future
 	// @IsEmail()

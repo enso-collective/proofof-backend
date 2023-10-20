@@ -1,22 +1,59 @@
-import { IsDate, IsString } from 'class-validator'
+import { Expose } from 'class-transformer'
+import {
+	Equals,
+	IsDate,
+	IsDefined,
+	IsEmail,
+	IsEnum,
+	IsEthereumAddress,
+	IsString,
+} from 'class-validator'
 
-import { AuthProvider, EmailAddress, EthereumAddress, UserAccountType } from '../types'
+import {
+	EmailAddress,
+	EthereumAddress,
+	UserAccountType,
+	Web2AuthProvider,
+	Web3AuthProvider,
+} from '../types'
 
-/*
-	account_types: ‘web3' | ‘web2'
-	account_provider: 'apple', 'google', 'auth0', 'metamask', 'walletconnect'
-	account_value: drew@ensocollective.xyz when account_type = ‘web2'
-	account_value: 0x....1234 when account_type = 'web3'
-*/
-export class CreateUserAccountDto {
+export class CreateUserAccountWeb2Dto {
+	@Equals(UserAccountType.Web2)
+	@IsDefined()
+	@Expose()
+	type: UserAccountType.Web2
+
+	@IsEnum(Web2AuthProvider)
+	@IsDefined()
+	@Expose()
+	provider: Web2AuthProvider
+
+	@IsEmail()
+	@IsDefined()
+	@Expose()
+	value: EmailAddress
+
+	@IsDate()
+	lastLogin: Date
+}
+
+export class CreateUserAccountWeb3Dto {
 	@IsString()
-	type: UserAccountType
+	@IsDefined()
+	@Equals(UserAccountType.Web3)
+	@Expose()
+	type: UserAccountType.Web3
 
 	@IsString()
-	provider: AuthProvider
+	@IsEnum(Web3AuthProvider)
+	@IsDefined()
+	@Expose()
+	provider: Web3AuthProvider
 
-	@IsString()
-	value: EmailAddress | EthereumAddress
+	@IsEthereumAddress()
+	@IsDefined()
+	@Expose()
+	value: EthereumAddress
 
 	@IsDate()
 	lastLogin: Date

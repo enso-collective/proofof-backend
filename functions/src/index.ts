@@ -10,6 +10,7 @@ if (process.env.NODE_ENV !== 'production') {
 	admin.firestore().settings({
 		host: 'localhost:8080',
 		ssl: false,
+		ignoreUndefinedProperties: true,
 	})
 }
 

@@ -1,59 +1,55 @@
 import * as admin from 'firebase-admin'
 import * as functions from 'firebase-functions'
+import _omit from 'lodash/omit'
 
 import { COLLECTIONS, SUBCOLLECTIONS } from '../constants'
-import { CreateUserAccountDto, CreateUserDto } from '../dtos'
-import { AuthProvider, UserAccountType } from '../types'
-import { handleServerErrorResponse } from '../utils/handleServerError'
+import {
+	CreateUserAccountWeb2Dto,
+	CreateUserAccountWeb3Dto,
+	CreateUserWithEmailDto,
+	CreateUserWithWalletDto,
+} from '../dtos'
+import { UserAccountType } from '../types'
+import { validateAndConvert } from '../utils/validateInputs'
 
-const createUser = async (newUser: CreateUserDto, userAccount: CreateUserAccountDto) => {
+/**
+ * Creates a new user and saves their record to the Firestore database. It only creates a new record if the email is not in use already.
+ * @param {CreateUserWithEmailDto | CreateUserWithWalletDto} newUser - The data for the new user.
+ * @param {CreateUserAccountDto} userAccount - The data for the user's account.
+ * @param {functions.Request} res - The HTTP response object.
+ * @return {Promise<string | functions.Response<any>>} A Promise that resolves with a JWT relating to the new user record's UID or a 400 response if the email is already in use.
+ */
+const createUser = async (
+	newUser: CreateUserWithEmailDto | CreateUserWithWalletDto,
+	userAccount: CreateUserAccountWeb2Dto | CreateUserAccountWeb3Dto,
+	res: functions.Response,
+) => {
 	// 1. Verify that the email is not in use by another user
 	const userSnapshot = await admin
 		.firestore()
 		.collection(COLLECTIONS.USERS)
 		.where('email', '==', newUser.email)
 		.get()
-	if (!userSnapshot.empty) throw Error(`The email '${newUser.email}' is already in use`)
+	if (!userSnapshot.empty)
+		return res.status(400).json({ error: `The email '${newUser.email}' is already in use` })
+
+	// NOTE/TODO: In order to prevent anyone from injecting bad data, ensure that the eoaAddress isn't also in use by another user as well. Even though many users could possibly share one address (permissable), users could also falsely inject this maliciously, which could have adverse side effects. This is simply a note and not a TODO since it's not unheard of multiple people sharing the same EOA address via key-sharing.
 
 	// 2. Create and save the new user record
 	const userRef = await admin.firestore().collection(COLLECTIONS.USERS).doc()
-	await userRef.set(newUser)
+	await userRef.set({
+		...newUser,
+		createdAt: new Date(),
+	})
 
 	// 3. Create and save the user account to its 'accounts' subcollection
-	await userRef.collection(SUBCOLLECTIONS.USER_ACCOUNTS).add(userAccount)
+	await userRef.collection(SUBCOLLECTIONS.USER_ACCOUNTS).add({
+		...userAccount,
+		lastLogin: new Date(),
+	})
 
 	// 4. Create and return the JWT relating to the new user record's UID
 	return admin.auth().createCustomToken(userRef.id)
-}
-
-// TODO: verify that username and email are both unique
-// TODO: use class-validator and class-transformer
-const validateEmailInputs = async (email: string, username: string, authProvider: AuthProvider) => {
-	if (
-		!email ||
-		!username ||
-		!authProvider ||
-		(authProvider !== AuthProvider.Apple &&
-			authProvider !== AuthProvider.Auth0 &&
-			authProvider !== AuthProvider.Google)
-	)
-		throw Error('Invalid inputs')
-}
-
-const validateWalletInputs = async (
-	email: string,
-	eoaAddress: string,
-	username: string,
-	authProvider: AuthProvider,
-) => {
-	if (
-		!email ||
-		!eoaAddress ||
-		!username ||
-		!authProvider ||
-		(authProvider !== AuthProvider.MetaMask && authProvider !== AuthProvider.WalletConnect)
-	)
-		throw Error('Invalid inputs')
 }
 
 /**
@@ -70,32 +66,46 @@ const validateWalletInputs = async (
  */
 export const signupWithEmail = functions.https.onRequest(async (req, res) => {
 	try {
-		const { authProvider, email, username } = req.body
-
 		// 1. Validate inputs
-		await validateEmailInputs(email, username, authProvider)
-
-		// 2. Construct minimally required data to create a new user and its account
-		const userData: CreateUserDto = {
-			createdAt: new Date(),
-			email,
-			eoaAddress: null, // explicitly set to null vs undefined
-			username,
+		const supportedParams = {
+			// Required
+			provider: req.body.provider,
+			email: req.body.email,
+			firstName: req.body.firstName,
+			lastName: req.body.lastName,
+			username: req.body.username,
+			// Optional
+			avatarUrl: req.body.avatarUrl,
+			bio: req.body.bio,
+			interests: req.body.interests,
 		}
-		const userAccountData: CreateUserAccountDto = {
+		const validateUserResult = await validateAndConvert(
+			CreateUserWithEmailDto,
+			_omit(supportedParams, ['provider']),
+		)
+		const validateUserAccountResult = await validateAndConvert(CreateUserAccountWeb2Dto, {
 			type: UserAccountType.Web2,
-			provider: authProvider,
-			value: email,
-			lastLogin: new Date(),
+			provider: supportedParams.provider,
+			value: supportedParams.email,
+		})
+
+		// 2. Catch validation errors if any
+		if (validateUserResult.error) {
+			res.status(400).json({ error: validateUserResult.error })
+		} else if (validateUserAccountResult.error) {
+			res.status(400).json({ error: validateUserAccountResult.error })
+		} else {
+			// 3. Save the new record to storage
+			const firebaseToken = await createUser(
+				validateUserResult.data,
+				validateUserAccountResult.data,
+				res,
+			)
+			// 4. Return the JWT
+			res.status(201).json({ data: firebaseToken })
 		}
-
-		// 3. Save the new record to storage
-		const firebaseToken = await createUser(userData, userAccountData)
-
-		// 4. Return the JWT
-		res.json({ firebaseToken })
-	} catch (error) {
-		handleServerErrorResponse(error, res)
+	} catch (e: any) {
+		res.status(500).json({ error: 'Server error' })
 	}
 })
 
@@ -113,31 +123,46 @@ export const signupWithEmail = functions.https.onRequest(async (req, res) => {
  */
 export const signupWithWallet = functions.https.onRequest(async (req, res) => {
 	try {
-		const { authProvider, email, eoaAddress, username } = req.body
-
 		// 1. Validate inputs
-		await validateWalletInputs(email, eoaAddress, username, authProvider)
-
-		// 2. Construct minimally required data to create a new user and its account
-		const userData: CreateUserDto = {
-			createdAt: new Date(),
-			email,
-			eoaAddress,
-			username,
+		const supportedParams = {
+			// Required
+			provider: req.body.provider,
+			email: req.body.email,
+			eoaAddress: req.body.eoaAddress,
+			firstName: req.body.firstName,
+			lastName: req.body.lastName,
+			username: req.body.username,
+			// Optional
+			avatarUrl: req.body.avatarUrl,
+			bio: req.body.bio,
+			interests: req.body.interests,
 		}
-		const userAccountData: CreateUserAccountDto = {
+		const validateUserResult = await validateAndConvert(
+			CreateUserWithWalletDto,
+			_omit(supportedParams, ['provider']),
+		)
+		const validateUserAccountResult = await validateAndConvert(CreateUserAccountWeb3Dto, {
 			type: UserAccountType.Web3,
-			provider: authProvider,
-			value: eoaAddress,
-			lastLogin: new Date(),
+			provider: supportedParams.provider,
+			value: supportedParams.eoaAddress,
+		})
+
+		// 2. Catch validation errors if any
+		if (validateUserResult.error) {
+			res.status(400).json({ error: validateUserResult.error })
+		} else if (validateUserAccountResult.error) {
+			res.status(400).json({ error: validateUserAccountResult.error })
+		} else {
+			// 3. Save the new record to storage
+			const firebaseToken = await createUser(
+				validateUserResult.data,
+				validateUserAccountResult.data,
+				res,
+			)
+			// 4. Return the JWT
+			res.status(201).json({ data: firebaseToken })
 		}
-
-		// 3. Save the new record to storage
-		const firebaseToken = await createUser(userData, userAccountData)
-
-		// 4. Return the JWT
-		res.json({ firebaseToken })
-	} catch (error) {
-		handleServerErrorResponse(error, res)
+	} catch (e: any) {
+		res.status(500).json({ error: 'Server error' })
 	}
 })
