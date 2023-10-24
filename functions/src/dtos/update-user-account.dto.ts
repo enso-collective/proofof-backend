@@ -1,4 +1,4 @@
-import { IsDate, IsOptional, IsString } from 'class-validator'
+import { IsDate, IsDefined, IsOptional, IsString } from 'class-validator'
 
 import { EmailAddress, EthereumAddress } from '../types'
 
@@ -8,5 +8,6 @@ export class UpdateUserAccountDto {
 	value?: EmailAddress | EthereumAddress
 
 	@IsDate()
+	@IsDefined()
 	lastLogin: Date
 }

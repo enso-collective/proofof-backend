@@ -2,7 +2,6 @@ import * as admin from 'firebase-admin'
 import * as functions from 'firebase-functions'
 
 import { COLLECTIONS } from '../constants'
-import { handleServerError } from '../utils/handleServerError'
 
 export const deletePostFromBoards = functions.firestore
 	.document(`${COLLECTIONS.POSTS}/{postId}`)
@@ -61,7 +60,7 @@ export const deletePostFromBoards = functions.firestore
 		})
 
 		return batch.commit().catch(error => {
-			handleServerError(error)
+			console.error('Server error:', error)
 			return null
 		})
 	})

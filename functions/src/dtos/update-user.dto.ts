@@ -1,4 +1,4 @@
-import { IsDate, IsEthereumAddress, IsOptional, IsString } from 'class-validator'
+import { IsDate, IsDefined, IsEthereumAddress, IsOptional, IsString } from 'class-validator'
 
 import { EthereumAddress } from '../types'
 
@@ -38,7 +38,8 @@ export class UpdateUserDto {
 	interests?: string[]
 
 	@IsDate()
-	modifiedAt: Date
+	@IsDefined()
+	lastModified: Date
 
 	@IsString()
 	@IsOptional()

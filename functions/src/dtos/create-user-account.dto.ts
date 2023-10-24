@@ -26,7 +26,7 @@ export class CreateUserAccountWeb2Dto {
 	@IsEnum(Web2AuthProvider)
 	@IsDefined()
 	@Expose()
-	provider: Web2AuthProvider
+	authProvider: Web2AuthProvider
 
 	@IsEmail()
 	@IsDefined()
@@ -48,7 +48,7 @@ export class CreateUserAccountWeb3Dto {
 	@IsEnum(Web3AuthProvider)
 	@IsDefined()
 	@Expose()
-	provider: Web3AuthProvider
+	authProvider: Web3AuthProvider
 
 	@IsEthereumAddress()
 	@IsDefined()

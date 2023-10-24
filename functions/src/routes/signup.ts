@@ -33,7 +33,7 @@ const createUser = async (
 	if (!userSnapshot.empty)
 		return res.status(400).json({ error: `The email '${newUser.email}' is already in use` })
 
-	// NOTE/TODO: In order to prevent anyone from injecting bad data, ensure that the eoaAddress isn't also in use by another user as well. Even though many users could possibly share one address (permissable), users could also falsely inject this maliciously, which could have adverse side effects. This is simply a note and not a TODO since it's not unheard of multiple people sharing the same EOA address via key-sharing.
+	// TODO: In order to prevent anyone from injecting bad data, ensure that the eoaAddress isn't also in use by another user as well. Even though many users could possibly share one address (permissable), users could also falsely inject this maliciously, which could have adverse side effects. This is simply a note and not a TODO since it's not unheard of multiple people sharing the same EOA address via key-sharing.
 
 	// 2. Create and save the new user record
 	const userRef = await admin.firestore().collection(COLLECTIONS.USERS).doc()
@@ -69,7 +69,7 @@ export const signupWithEmail = functions.https.onRequest(async (req, res) => {
 		// 1. Validate inputs
 		const supportedParams = {
 			// Required
-			provider: req.body.provider,
+			authProvider: req.body.authProvider,
 			email: req.body.email,
 			firstName: req.body.firstName,
 			lastName: req.body.lastName,
@@ -81,11 +81,11 @@ export const signupWithEmail = functions.https.onRequest(async (req, res) => {
 		}
 		const validateUserResult = await validateAndConvert(
 			CreateUserWithEmailDto,
-			_omit(supportedParams, ['provider']),
+			_omit(supportedParams, ['authProvider']),
 		)
 		const validateUserAccountResult = await validateAndConvert(CreateUserAccountWeb2Dto, {
 			type: UserAccountType.Web2,
-			provider: supportedParams.provider,
+			authProvider: supportedParams.authProvider,
 			value: supportedParams.email,
 		})
 
@@ -104,8 +104,8 @@ export const signupWithEmail = functions.https.onRequest(async (req, res) => {
 			// 4. Return the JWT
 			res.status(201).json({ data: firebaseToken })
 		}
-	} catch (e: any) {
-		res.status(500).json({ error: 'Server error' })
+	} catch (error: any) {
+		res.status(500).json({ error: error.message })
 	}
 })
 
@@ -126,7 +126,7 @@ export const signupWithWallet = functions.https.onRequest(async (req, res) => {
 		// 1. Validate inputs
 		const supportedParams = {
 			// Required
-			provider: req.body.provider,
+			authProvider: req.body.authProvider,
 			email: req.body.email,
 			eoaAddress: req.body.eoaAddress,
 			firstName: req.body.firstName,
@@ -139,11 +139,11 @@ export const signupWithWallet = functions.https.onRequest(async (req, res) => {
 		}
 		const validateUserResult = await validateAndConvert(
 			CreateUserWithWalletDto,
-			_omit(supportedParams, ['provider']),
+			_omit(supportedParams, ['authProvider']),
 		)
 		const validateUserAccountResult = await validateAndConvert(CreateUserAccountWeb3Dto, {
 			type: UserAccountType.Web3,
-			provider: supportedParams.provider,
+			authProvider: supportedParams.authProvider,
 			value: supportedParams.eoaAddress,
 		})
 
@@ -162,7 +162,7 @@ export const signupWithWallet = functions.https.onRequest(async (req, res) => {
 			// 4. Return the JWT
 			res.status(201).json({ data: firebaseToken })
 		}
-	} catch (e: any) {
-		res.status(500).json({ error: 'Server error' })
+	} catch (error: any) {
+		res.status(500).json({ error: error.message })
 	}
 })
