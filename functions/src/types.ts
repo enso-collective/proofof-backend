@@ -1,5 +1,18 @@
+// Strings
 export type EmailAddress = `${string}@${string}.${string}`
 export type EthereumAddress = `0x${string}`
+
+// Enums (collections viewed as constants)
+export enum COLLECTIONS {
+	BOARDS = 'boards',
+	POSTS = 'posts',
+	POST_LOCATIONS = 'postLocations',
+	USERS = 'users',
+}
+
+export enum SUBCOLLECTIONS {
+	USER_ACCOUNTS = 'accounts',
+}
 
 export enum Web2AuthProvider {
 	Apple = 'apple',

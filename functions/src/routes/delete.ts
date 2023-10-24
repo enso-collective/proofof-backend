@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin'
 import * as functions from 'firebase-functions'
 
-import { COLLECTIONS } from '../constants'
+import { COLLECTIONS } from '../types'
 
 export const deletePostFromBoards = functions.firestore
 	.document(`${COLLECTIONS.POSTS}/{postId}`)

@@ -1,7 +1,6 @@
 import * as admin from 'firebase-admin'
 import * as functions from 'firebase-functions'
 
-import { COLLECTIONS, SUBCOLLECTIONS } from '../constants'
 import {
 	CreateUserAccountWeb2Dto,
 	CreateUserAccountWeb3Dto,
@@ -9,7 +8,7 @@ import {
 	UpdateUserDto,
 	UserEmailDto,
 } from '../dtos'
-import { UserAccountType } from '../types'
+import { COLLECTIONS, SUBCOLLECTIONS, UserAccountType } from '../types'
 import { validateAndConvert } from '../utils/validateInputs'
 
 /**

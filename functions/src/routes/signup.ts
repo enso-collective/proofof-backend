@@ -2,14 +2,13 @@ import * as admin from 'firebase-admin'
 import * as functions from 'firebase-functions'
 import _omit from 'lodash/omit'
 
-import { COLLECTIONS, SUBCOLLECTIONS } from '../constants'
 import {
 	CreateUserAccountWeb2Dto,
 	CreateUserAccountWeb3Dto,
 	CreateUserWithEmailDto,
 	CreateUserWithWalletDto,
 } from '../dtos'
-import { UserAccountType } from '../types'
+import { COLLECTIONS, SUBCOLLECTIONS, UserAccountType } from '../types'
 import { validateAndConvert } from '../utils/validateInputs'
 
 /**
