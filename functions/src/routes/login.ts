@@ -11,6 +11,8 @@ import {
 import { COLLECTIONS, SUBCOLLECTIONS, UserAccountType } from '../types'
 import { validateAndConvert } from '../utils/validateInputs'
 
+// TODO: DRY up some of the duplicate code
+
 /**
  * Firebase HTTP Function to authenticate with an email address and create a Firebase custom token.
  */
