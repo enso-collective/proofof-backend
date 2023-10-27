@@ -6,61 +6,64 @@ import { COLLECTIONS } from '../types'
 export const deletePostFromBoards = functions.firestore
 	.document(`${COLLECTIONS.POSTS}/{postId}`)
 	.onDelete(async (snap, context) => {
-		const postId = context.params.postId
-		const userId = snap.data()?.ownerId
-		const batch = admin.firestore().batch()
+		try {
+			const postId = context.params.postId
+			const userId = snap.data()?.ownerId
+			const batch = admin.firestore().batch()
 
-		const postLocationRef = admin.firestore().collection(COLLECTIONS.POST_LOCATIONS).doc(postId)
+			const postLocationRef = admin.firestore().collection(COLLECTIONS.POST_LOCATIONS).doc(postId)
 
-		const postLocationDoc = await postLocationRef.get()
-		const postLocationsDocData = postLocationDoc.data()
+			const postLocationDoc = await postLocationRef.get()
+			const postLocationsDocData = postLocationDoc.data()
 
-		if (!postLocationsDocData?.locations) {
-			return
-		}
-
-		const updatedPublicBoards = [...postLocationsDocData.locations.publicBoards]
-		const updatedPrivateBoards = [...postLocationsDocData.locations.privateBoards]
-
-		// Function to delete a post from a board and update the lists
-		const deletePostFromBoard = (boardId: string, isPrivate: boolean) => {
-			const collectionPath = isPrivate
-				? `${COLLECTIONS.USERS}/${userId}/${COLLECTIONS.BOARDS}`
-				: COLLECTIONS.BOARDS
-
-			const postRef = admin
-				.firestore()
-				.collection(collectionPath)
-				.doc(boardId)
-				.collection('posts')
-				.doc(postId)
-
-			const index = isPrivate
-				? updatedPrivateBoards.indexOf(boardId)
-				: updatedPublicBoards.indexOf(boardId)
-
-			if (index > -1) {
-				isPrivate ? updatedPrivateBoards.splice(index, 1) : updatedPublicBoards.splice(index, 1)
+			if (!postLocationsDocData?.locations) {
+				return
 			}
 
-			batch.delete(postRef)
-		}
+			const updatedPublicBoards = [...postLocationsDocData.locations.publicBoards]
+			const updatedPrivateBoards = [...postLocationsDocData.locations.privateBoards]
 
-		postLocationsDocData.locations.publicBoards.forEach((boardId: string) => {
-			deletePostFromBoard(boardId, false)
-		})
+			// Function to delete a post from a board and update the lists
+			const deletePostFromBoard = (boardId: string, isPrivate: boolean) => {
+				const collectionPath = isPrivate
+					? `${COLLECTIONS.USERS}/${userId}/${COLLECTIONS.BOARDS}`
+					: COLLECTIONS.BOARDS
 
-		postLocationsDocData.locations.privateBoards.forEach((boardId: string) => {
-			deletePostFromBoard(boardId, true)
-		})
+				const postRef = admin
+					.firestore()
+					.collection(collectionPath)
+					.doc(boardId)
+					.collection('posts')
+					.doc(postId)
 
-		batch.update(postLocationRef, {
-			'locations.publicBoards': updatedPublicBoards,
-			'locations.privateBoards': updatedPrivateBoards,
-		})
+				const index = isPrivate
+					? updatedPrivateBoards.indexOf(boardId)
+					: updatedPublicBoards.indexOf(boardId)
 
-		return batch.commit().catch(error => {
-			console.error('Server error:', error)
+				if (index > -1) {
+					isPrivate ? updatedPrivateBoards.splice(index, 1) : updatedPublicBoards.splice(index, 1)
+				}
+
+				batch.delete(postRef)
+			}
+
+			postLocationsDocData.locations.publicBoards.forEach((boardId: string) => {
+				deletePostFromBoard(boardId, false)
+			})
+
+			postLocationsDocData.locations.privateBoards.forEach((boardId: string) => {
+				deletePostFromBoard(boardId, true)
+			})
+
+			batch.update(postLocationRef, {
+				'locations.publicBoards': updatedPublicBoards,
+				'locations.privateBoards': updatedPrivateBoards,
+			})
+
+			const result = await batch.commit()
+			return result
+		} catch (error: any) {
+			functions.logger.error(error)
 			return null
-		})
+		}
 	})
