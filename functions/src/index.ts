@@ -15,5 +15,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export { deletePostFromBoards } from './routes/delete'
+export {
+	issueDiscoCredential,
+	retrieveDiscoCredential,
+	verifyDiscoCredential,
+} from './routes/disco'
 export { loginWithEmail, loginWithWallet } from './routes/login'
 export { signupWithEmail, signupWithWallet } from './routes/signup'

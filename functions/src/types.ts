@@ -11,6 +11,7 @@ export enum COLLECTIONS {
 }
 
 export enum SUBCOLLECTIONS {
+	DISCO_CREDENTIALS = 'discoCredentials',
 	USER_ACCOUNTS = 'accounts',
 }
 
