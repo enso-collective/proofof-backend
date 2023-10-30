@@ -16,8 +16,8 @@ import { validateAndConvert } from '../utils/validateInputs'
 
 // Initialize the Auth0 client
 const auth0 = new AuthenticationClient({
-	domain: 'dev-gjtt35jcnaro1wqn.us.auth0.com',
-	clientId: 'N0dyY1AJ7UVluxDlvtN1Nsvc0sW9qHl8',
+	domain: process.env.AUTH0_DOMAIN,
+	clientId: process.env.AUTH0_CLIENT_ID,
 })
 
 /**
