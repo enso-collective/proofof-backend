@@ -1,3 +1,4 @@
+import { AuthenticationClient } from 'auth0'
 import * as admin from 'firebase-admin'
 import * as functions from 'firebase-functions'
 
@@ -13,6 +14,12 @@ import { validateAndConvert } from '../utils/validateInputs'
 
 // TODO: DRY up some of the duplicate code
 
+// Initialize the Auth0 client
+const auth0 = new AuthenticationClient({
+	domain: 'dev-gjtt35jcnaro1wqn.us.auth0.com',
+	clientId: 'N0dyY1AJ7UVluxDlvtN1Nsvc0sW9qHl8',
+})
+
 /**
  * Firebase HTTP Function to authenticate with an email address and create a Firebase custom token.
  */
@@ -22,6 +29,7 @@ export const loginWithEmail = functions.https.onRequest(async (req, res) => {
 		const supportedParams = {
 			authProvider: req.body.authProvider,
 			email: req.body.email,
+			auth0Token: req.body.auth0Token,
 		}
 		const validateEmailResult = await validateAndConvert(UserEmailDto, {
 			email: supportedParams.email,
@@ -38,7 +46,15 @@ export const loginWithEmail = functions.https.onRequest(async (req, res) => {
 		} else if (validateUserAccountResult.error) {
 			res.status(400).json({ error: validateUserAccountResult.error })
 		} else {
-			// 3. Get user by email. There should only be one user per email based on signup constraints
+			// 3. Get user by provided Auth0 token and check that emails match
+			const userInfo = await auth0.users.getInfo(supportedParams.auth0Token)
+			if (!userInfo) throw new Error('User with provided Auth0 token could not be found')
+			if (userInfo.email !== supportedParams.email)
+				throw new Error(
+					`The provided Auth0 token must match with the email ${supportedParams.email}`,
+				)
+
+			// 4. Get user record by email. There should only be one user per email based on signup constraints
 			const userSnapshot = await admin
 				.firestore()
 				.collection(COLLECTIONS.USERS)
@@ -54,7 +70,7 @@ export const loginWithEmail = functions.https.onRequest(async (req, res) => {
 				.where('authProvider', '==', supportedParams.authProvider)
 				.get()
 
-			// 4a. If doesn't exist (first time login with provider), create a new account record for the user. The same email can log in with multiple providers, so it's possible to have an email but log in with a new provider.
+			// 5a. If doesn't exist (first time login with provider), create a new account record for the user. The same email can log in with multiple providers, so it's possible to have an email but log in with a new provider.
 			if (userAccountSnapshot.empty) {
 				const userAccount: CreateUserAccountWeb2Dto = {
 					type: UserAccountType.Web2,
@@ -64,7 +80,7 @@ export const loginWithEmail = functions.https.onRequest(async (req, res) => {
 				}
 				await userRef.collection(SUBCOLLECTIONS.USER_ACCOUNTS).add(userAccount)
 			}
-			// 4b. Otherwise, update the login time for that provider account.
+			// 5b. Otherwise, update the login time for that provider account.
 			else {
 				const userAccountRef = userAccountSnapshot.docs[0].ref
 				const updateUserAccountData: UpdateUserAccountDto = {
@@ -73,7 +89,7 @@ export const loginWithEmail = functions.https.onRequest(async (req, res) => {
 				userAccountRef.set(updateUserAccountData, { merge: true })
 			}
 
-			// 5. Create and return the JWT relating to the user record's UID
+			// 6. Create and return the JWT relating to the user record's UID
 			const firebaseToken = await admin.auth().createCustomToken(userRef.id)
 			res.json({ firebaseToken })
 		}
