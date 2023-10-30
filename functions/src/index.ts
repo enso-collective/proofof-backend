@@ -10,9 +10,15 @@ if (process.env.NODE_ENV !== 'production') {
 	admin.firestore().settings({
 		host: 'localhost:8080',
 		ssl: false,
+		ignoreUndefinedProperties: true,
 	})
 }
 
 export { deletePostFromBoards } from './routes/delete'
-export { authWithApple, authWithAuth0, createUserAccount, loginWithWallet } from './routes/login'
-export { validateEmail, validateUsername } from './routes/validation'
+export {
+	issueDiscoCredential,
+	retrieveDiscoCredential,
+	verifyDiscoCredential,
+} from './routes/disco'
+export { loginWithEmail, loginWithWallet } from './routes/login'
+export { signupWithEmail, signupWithWallet } from './routes/signup'

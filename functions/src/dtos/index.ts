@@ -1,0 +1,6 @@
+export * from './create-user.dto'
+export * from './create-user-account.dto'
+export * from './disco-did.dto'
+export * from './update-user.dto'
+export * from './update-user-account.dto'
+export * from './user-email.dto'
