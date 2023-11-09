@@ -1,6 +1,11 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { AuthenticationClient } from 'auth0';
+import {
+  AppleAccountSchema,
+  Auth0AccountSchema,
+  CryptoWalletSchema,
+} from './schemes';
 
 const auth0 = new AuthenticationClient({
   domain: 'dev-gjtt35jcnaro1wqn.us.auth0.com',
@@ -12,6 +17,8 @@ interface Jwt {
   email: string;
   user_id: string;
 }
+
+const pattern = /^metamask/;
 
 export const createUserAccount = functions.auth
   .user()
@@ -81,6 +88,89 @@ export const authWithAuth0 = functions.https.onRequest(async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send('Server error');
+  }
+});
+
+// ...
+
+// Function to determine the account type
+function determineAccountType(accountData: any) {
+  if (accountData.publicAddress) {
+    return 'crypto';
+  } else if (accountData.auth0Id) {
+    return 'auth0';
+  } else if (accountData.appleId) {
+    return 'apple';
+  } else if (accountData.email && accountData.id) {
+    return 'firebase'; // Assuming the presence of 'id' implies a Firebase account
+  }
+  // Add more conditions as needed for other account types
+  return null; // or a default account type if applicable
+}
+
+// Function to create Account document from old user account map
+function createAccountDocument(
+  userId: string,
+  accountData: any,
+  accountKey: string,
+) {
+  const accountType = determineAccountType(accountData);
+  let accountDoc;
+
+  switch (accountType) {
+    case 'auth0':
+      accountDoc = Auth0AccountSchema.parse({
+        userId,
+        type: accountType,
+        auth0Id: accountData.auth0Id,
+      });
+      break;
+    case 'apple':
+      accountDoc = AppleAccountSchema.parse({
+        userId,
+        type: accountType,
+        appleId: accountData.appleId,
+      });
+      break;
+    case 'crypto':
+      const isMetamask = pattern.test(accountKey);
+      accountDoc = CryptoWalletSchema.parse({
+        userId,
+        type: accountType,
+        walletAddress: accountData.publicAddress,
+        provider: isMetamask ? 'metamask' : 'walletconnect',
+      });
+      break;
+    case 'firebase':
+      accountDoc = {
+        userId,
+        type: accountType,
+        identifier: accountData.email,
+      };
+      break;
+    // Add cases for other account types if necessary
+  }
+  return accountDoc;
+}
+
+export const exportData = functions.https.onRequest(async (req, res) => {
+  const usersRef = admin.firestore().collection('users');
+
+  // Get all user documents
+  const usersSnapshot = await usersRef.get();
+
+  for (const userDoc of usersSnapshot.docs) {
+    const userData = userDoc.data();
+    const userId = userDoc.id;
+
+    // Iterate over accounts in the user document
+    for (const [key, accountData] of Object.entries(userData.accounts || {})) {
+      const accountDoc = createAccountDocument(userId, accountData, key);
+      await admin
+        .firestore()
+        .collection('accounts')
+        .add(accountDoc as any);
+    }
   }
 });
 
