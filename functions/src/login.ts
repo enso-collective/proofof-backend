@@ -1,97 +1,11 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { AuthenticationClient } from 'auth0';
+// import { AuthenticationClient } from 'auth0';
 import {
   AppleAccountSchema,
   Auth0AccountSchema,
   CryptoWalletSchema,
 } from './schemes';
-
-const auth0 = new AuthenticationClient({
-  domain: 'dev-gjtt35jcnaro1wqn.us.auth0.com',
-  clientId: 'N0dyY1AJ7UVluxDlvtN1Nsvc0sW9qHl8',
-});
-
-interface Jwt {
-  sub: string;
-  email: string;
-  user_id: string;
-}
-
-const pattern = /^metamask/;
-
-export const createUserAccount = functions.auth
-  .user()
-  .onCreate(async (user) => {
-    const { uid, email, displayName, photoURL } = user;
-    const userObject = {
-      uid,
-      email,
-      displayName,
-      photoURL,
-      accounts: {
-        ['firebase']: {
-          id: uid,
-          email,
-        },
-      },
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-    try {
-      await admin.firestore().collection('users').doc(uid).set(userObject);
-      console.log(`User account created: ${uid}`);
-    } catch (error) {
-      console.error(`Error creating user account: ${error}`);
-    }
-  });
-
-export const authWithAuth0 = functions.https.onRequest(async (req, res) => {
-  try {
-    const auth0Token: string = req.body.auth0Token;
-    const accountType: string = 'auth0';
-    const userInfo = (await auth0.users?.getInfo(auth0Token)) as
-      | Jwt
-      | undefined;
-    if (!userInfo) throw new Error('No user info');
-    userInfo.user_id = userInfo.sub.split('|')[1];
-
-    const usersCollection = admin.firestore().collection('users');
-    const userSnapshot = await usersCollection
-      .where('accounts.auth0.auth0Id', '==', userInfo.user_id)
-      .get();
-
-    if (!userSnapshot.empty) {
-      const userDoc = userSnapshot.docs[0];
-      const firebaseUid = userDoc.id;
-      const customToken = await admin.auth().createCustomToken(firebaseUid);
-      res.json({ firebaseToken: customToken });
-      return;
-    }
-
-    const userRef = usersCollection.doc();
-
-    const user = {
-      uid: userRef.id,
-      email: userInfo.email,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      accounts: {
-        [accountType]: {
-          auth0Id: userInfo.user_id,
-          email: userInfo.email,
-        },
-      },
-    };
-
-    await userRef.set(user, { merge: true });
-    const customToken = await admin.auth().createCustomToken(userRef.id);
-    res.json({ firebaseToken: customToken });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Server error');
-  }
-});
-
-// ...
 
 // Function to determine the account type
 function determineAccountType(accountData: any) {
@@ -101,7 +15,7 @@ function determineAccountType(accountData: any) {
     return 'auth0';
   } else if (accountData.appleId) {
     return 'apple';
-  } else if (accountData.email && accountData.id) {
+  } else if (accountData.id) {
     return 'firebase'; // Assuming the presence of 'id' implies a Firebase account
   }
   // Add more conditions as needed for other account types
@@ -133,22 +47,21 @@ function createAccountDocument(
       });
       break;
     case 'crypto':
-      const isMetamask = pattern.test(accountKey);
       accountDoc = CryptoWalletSchema.parse({
         userId,
         type: accountType,
+        namespace: accountData.namespace,
         walletAddress: accountData.publicAddress,
-        provider: isMetamask ? 'metamask' : 'walletconnect',
+        reference: accountData.reference,
       });
       break;
     case 'firebase':
       accountDoc = {
         userId,
         type: accountType,
-        identifier: accountData.email,
+        email: accountData.email,
       };
       break;
-    // Add cases for other account types if necessary
   }
   return accountDoc;
 }
@@ -172,46 +85,46 @@ export const exportData = functions.https.onRequest(async (req, res) => {
         .add(accountDoc as any);
     }
   }
+  res.send('Migration completed.');
 });
 
-export const authWithApple = functions.https.onRequest(async (req, res) => {
-  try {
-    const appleId: string = req.body.appleId;
-    const email: string | undefined = req.body.email;
-    const accountType: string = 'apple';
+export const migrateUserData = functions.https.onRequest(async (req, res) => {
+  // Reference to the users collection
+  const usersRef = admin.firestore().collection('users');
 
-    const usersCollection = admin.firestore().collection('users');
-    const userSnapshot = await usersCollection
-      .where(`accounts.${accountType}.appleId`, '==', appleId)
-      .get();
+  // Reference to the publicInfo sub-collection
+  const batch = admin.firestore().batch();
 
-    if (!userSnapshot.empty) {
-      const userDoc = userSnapshot.docs[0];
-      const firebaseUid = userDoc.id;
-      const customToken = await admin.auth().createCustomToken(firebaseUid);
-      res.json({ firebaseToken: customToken });
-      return;
-    }
+  // Fetch all user documents
+  const snapshot = await usersRef.get();
 
-    const userRef = usersCollection.doc();
+  snapshot.forEach((doc) => {
+    const userData = doc.data();
+    const userId = doc.id;
 
-    const user = {
-      uid: userRef.id,
-      email: email,
+    // Transform the data
+    const publicInfo = {
+      avatarUrl: userData.avatarUrl || '',
+      username: userData.username || '',
+      displayName: userData.displayName || '',
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      accounts: {
-        [accountType]: {
-          appleId,
-        },
-      },
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      userId,
+      bio: userData.bio || '',
+      backgroundUrl: userData.backgroundUrl || '',
     };
 
-    await userRef.set(user, { merge: true });
-    const customToken = await admin.auth().createCustomToken(userRef.id);
-    res.json({ firebaseToken: customToken });
-    return;
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Server error');
-  }
+    // Write to the publicInfo sub-collection
+    const publicInfoRef = admin
+      .firestore()
+      .collection('usersPublicMetadata')
+      .doc(userId);
+
+    batch.set(publicInfoRef, publicInfo, { merge: true });
+  });
+
+  // Commit the batch
+  await batch.commit();
+
+  res.send('Migration completed.');
 });
