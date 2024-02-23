@@ -6,3 +6,4 @@ admin.initializeApp({
 });
 
 export { farcasterWebhook } from './farcasterWebhook'
+export { twitterScheduler } from './twitterScheduler'

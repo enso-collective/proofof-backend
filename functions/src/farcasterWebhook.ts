@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import OpenAI from 'openai';
 import { NeynarAPIClient } from "@neynar/nodejs-sdk";
-import { checkFarcasterUserState } from './farcasterUserState';
+// import { checkFarcasterUserState } from './farcasterUserState';
 
 import {
     farcasterWebhookInput
@@ -26,18 +26,25 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
 
     console.log(data);
 
-    if (typeof data.embedUrl === 'undefined') {
+    if (data.wallet === undefined) {
+        // reply in farcaster
+        await farcasterPost(`Please add a verified wallet in your profile settings and retry this cast to mint a Proof`, data.hash)
+        res.send({ success: false });
+        return
+    }
+
+    if (data.embedUrl === undefined) {
         // reply in farcaster
         await farcasterPost(`I didn't see an image attached to your cast @${data.username}, please retry a new cast with an image.`, data.hash)
         res.send({ success: false });
         return
     }
 
-    if (false == await checkFarcasterUserState(data.fid)) {
-        await farcasterPost(`@${data.username} you're out of validations for today. Please try again later.`, data.hash)
-        res.send({ success: false });
-        return;
-    }
+    // if (false == await checkFarcasterUserState(data.fid)) {
+    //     await farcasterPost(`@${data.username} you're out of validations for today. Please try again later.`, data.hash)
+    //     res.send({ success: false });
+    //     return;
+    // }
 
     const openai = new OpenAI({ apiKey: OPENAI_API_KEY })
 
