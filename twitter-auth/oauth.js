@@ -17,8 +17,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const twitter_api_sdk_1 = require("twitter-api-sdk");
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const accessToken = 'UkxzX3p6a0l4eXNWZV9SYTlxVTc6MTpjaQ';
-const secretToken = '09IAMSYihyjijEiZFrlL6764p4zo1IaW6pXstOdqmNHDJJzAqK';
+const accessToken = 'YWxWU1AybEdFejdZU2F1V2pBSno6MTpjaQ';
+const secretToken = '2uKYfKIZV-8bGreqrLhm5IJ8IcoVh-ItyXpRodq27XKNL4zVd_';
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const authClient = new twitter_api_sdk_1.auth.OAuth2User({
