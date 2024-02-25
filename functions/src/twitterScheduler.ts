@@ -1,5 +1,6 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { Client, auth } from "twitter-api-sdk";
+import { components } from "twitter-api-sdk/dist/gen/openapi-types";
 import OpenAI from 'openai';
 import * as admin from 'firebase-admin';
 
@@ -12,21 +13,27 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 export const twitterScheduler = onSchedule('* * * * *', async (event) => {
     const twitterSettingsCollection = admin.firestore().collection('twitterSettings');
 
+    console.log('1');
+
     await admin.firestore().runTransaction(async t => {
-        const twitterSetings =  await t.get(twitterSettingsCollection.doc('settings'));
+        const twitterSetings = await t.get(twitterSettingsCollection.doc('settings'));
         const token = twitterSetings.data()?.token;
 
-        const authClient = new auth.OAuth2User({
-            client_id: TWITTER_API_KEY!,
-            client_secret: TWITTER_API_SECRET_KEY,
-            callback: "http://127.0.0.1:3000/callback",
-            scopes: ["tweet.read", "tweet.write", "users.read", "offline.access"],
-            token: token
-        });
-    
-        if (authClient.isAccessTokenExpired()) {
-            const newToken = await authClient.refreshAccessToken();
-            await twitterSettingsCollection.doc('settings').set({ token: newToken.token });
+        try {
+            const authClient = new auth.OAuth2User({
+                client_id: TWITTER_API_KEY!,
+                client_secret: TWITTER_API_SECRET_KEY,
+                callback: "http://127.0.0.1:3000/callback",
+                scopes: ["tweet.read", "tweet.write", "users.read", "offline.access"],
+                token: token
+            });
+        
+            if (authClient.isAccessTokenExpired()) {
+                const newToken = await authClient.refreshAccessToken();
+                await twitterSettingsCollection.doc('settings').set({ token: newToken.token });
+            }
+        } catch(error) {
+            console.log(error);
         }
     });
 
@@ -43,10 +50,12 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
         token: token
     });
 
+    console.log('4');
+
     const appClient = new Client(TWITTER_API_BEARER_KEY!);
     const userClient = new Client(authClient);
 
-    const mentions = await appClient.tweets.usersIdMentions('70110647', { start_time: '2024-01-20T07:05:14.227Z', since_id: lastMentionTweetId, expansions: ['author_id', 'entities.mentions.username', 'attachments.media_keys'], 'media.fields': ['url', 'type', 'variants', 'preview_image_url'], 'user.fields': ['username', 'id', 'name'], 'tweet.fields': ['attachments', 'author_id', 'text', 'id'] });
+    const mentions = await appClient.tweets.usersIdMentions('1758104296208396288', { start_time: '2024-01-20T07:05:14.227Z', since_id: lastMentionTweetId, expansions: ['author_id', 'entities.mentions.username', 'attachments.media_keys'], 'media.fields': ['url', 'type', 'variants', 'preview_image_url'], 'user.fields': ['username', 'id', 'name'], 'tweet.fields': ['attachments', 'author_id', 'text', 'id'] });
     let newestId = mentions.meta?.newest_id;
 
     if (newestId !== undefined && twitterSettingsData === undefined) {
@@ -69,13 +78,13 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
         const user = users.find(x => x.id === element.author_id);
 
         const mediaKeys = element.attachments?.media_keys ?? [];
-        const photo = media.find(x => mediaKeys.includes(x.media_key ?? '') && x.type === 'photo');
+        const photo = media.find(x => mediaKeys.includes(x.media_key ?? '') && x.type === 'photo') as components['schemas']['Photo'];
 
         if (photo === undefined) {
             userClient.tweets.createTweet({ text: `I didn't see an image attached to your tweet @${user?.username}, please retry a new tweet with an image.`, reply: { in_reply_to_tweet_id: element.id } });
             return;
         }
-
+        console.log(photo.url);
         const openai = new OpenAI({ apiKey: OPENAI_API_KEY })
 
         // Extract brand name
@@ -105,7 +114,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             userClient.tweets.createTweet({ text: `We didn't find a clear brand described in your tweet @${user?.username}. Please retry your tweet with more specific description of the brand.`, reply: { in_reply_to_tweet_id: element.id } });
             console.log('cannot extract brand name')
 
-            return
+            return;
         }
 
         // Validate brand
@@ -136,7 +145,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
                     If the image has DESCRIPTION of the brand Ray-Ban, and there are no sunglasses visible in the image, then respond "NOT VALID - no Ray-Ban sunglasses visible".
                     If the image has the claim of the brand Ray-Ban, and there are sunglasses visible in the image but hard to tell what brand they are, which could be because there is no brand label visible or the item is small, then respond with "VALID - Ray-Ban, sunglasses".
                     If the DESCRIPTION says a swimsuit but the image contains a jacket, this would be "NOT VALID - image does not match description".`},
-                    { type: 'image_url', image_url: { url: '' } }
+                    { type: 'image_url', image_url: { url: photo.url! } }
                 ],
             }]
         });
@@ -145,8 +154,9 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
         if (typeof brandValidation !== 'string' || (typeof brandValidation === 'string' && brandValidation.includes('NOT VALID'))) {
             // reply in twitter
             userClient.tweets.createTweet({ text: `@${user?.username} we found a result of "${brandValidation}". Please try again with a different image or description.`, reply: { in_reply_to_tweet_id: element.id } });
-
-            return
+            return;
         }
+
+        userClient.tweets.createTweet({ text: `@${user?.username} we found a result of VALID`, reply: { in_reply_to_tweet_id: element.id } });
     });
 });
