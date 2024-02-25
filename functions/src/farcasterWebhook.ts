@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import OpenAI from 'openai';
 import { NeynarAPIClient } from "@neynar/nodejs-sdk";
+import { eas_mint } from './mint'
 // import { checkFarcasterUserState } from './farcasterUserState';
 
 import {
@@ -11,7 +12,6 @@ import { EmbeddedCast } from '@neynar/nodejs-sdk/build/neynar-api/v2';
 const NEYNAR_API_KEY =  process.env.NEYNAR_API_KEY;
 const NEYNAR_SIGNER_UUID = process.env.NEYNAR_SIGNER_UUID;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const ENSO_API_KEY = process.env.ENSO_API_KEY;
 
 export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
     const data = farcasterWebhookInput.parse({
@@ -120,30 +120,9 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
         return
     }
 
-    const headers = new Headers();
-    headers.append('Content-Type', 'application/json');
-    headers.append('Accept', '*/*');
+    const hash = await eas_mint(data.hash, data.fid, data.wallet, data.message, data.embedUrl, brandName);
 
-    const mintData = {
-        cast_hash: data.hash,
-        fid: data.fid,
-        attest_wallet: data.wallet,
-        cast_content: data.message,
-        cast_image_link: data.embedUrl,
-        assoc_brand: brandName,
-        token: ENSO_API_KEY
-    }
-
-    const response = await fetch('https://www.proofof.bot/mint', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(mintData),
-        redirect: 'follow',
-    });
-
-    const mintResult = JSON.parse(await response.text()).res;
-
-    await farcasterPost(`@${data.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${mintResult}`, data.hash, [{url: `https://www.onceupon.gg/${mintResult}`}])
+    await farcasterPost(`@${data.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}])
     res.send({ success: true });
 });
 
