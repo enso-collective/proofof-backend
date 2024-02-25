@@ -8,7 +8,7 @@ export async function eas_mint(cast_hash: string, fid: string, attest_wallet: st
             alchemy: process.env.ALCHEMY_KEY
         }
     );
-    const privateKey = process.env.PRIVATE_KEY
+    const privateKey = process.env.MINT_WALLET_PRIVATE_KEY
     if (!privateKey) {
         throw new Error('PRIVATE_KEY is not defined in the environment variables');
     }
