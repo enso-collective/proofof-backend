@@ -5,8 +5,8 @@ import { Client, auth } from "twitter-api-sdk";
 import express from "express";
 import dotenv from "dotenv";
 
-const accessToken = 'ZUlCbkxoajBSMGN6dXUwd252VFc6MTpjaQ'
-const secretToken = 'T7lInlY4NWYXdKfePvPnbFm_CYyp0au5iwkK353yN6uTFj2a-n'
+const accessToken = 'UkxzX3p6a0l4eXNWZV9SYTlxVTc6MTpjaQ'
+const secretToken = '09IAMSYihyjijEiZFrlL6764p4zo1IaW6pXstOdqmNHDJJzAqK'
 
 dotenv.config();
 
