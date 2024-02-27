@@ -1,5 +1,6 @@
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from "ethers";
+import * as admin from 'firebase-admin';
 
 export async function eas_mint(cast_hash: string, fid: string, attest_wallet: string, cast_content: string, cast_image_link: string, assoc_brand: string) {
     //push to EAS either onchain or offchain. docs: https://docs.attest.sh/docs/tutorials/make-an-attestation
@@ -39,6 +40,22 @@ export async function eas_mint(cast_hash: string, fid: string, attest_wallet: st
             revocable: true,
             data: encodedData
         },
+    });
+
+    const db = admin.firestore();
+    const questRef = db.collection('Quest').doc(); 
+    const userRef = db.collection('User').doc(); 
+
+    await db.runTransaction(async (t) => {
+        t.set(questRef, {
+            castHash: cast_hash,
+            castContent: cast_content,
+            castImageLink: cast_image_link,
+            associatedBrand: assoc_brand
+        });
+        t.set(userRef, {
+            attestWallet: attest_wallet
+        });
     });
 
     console.log(tx);
