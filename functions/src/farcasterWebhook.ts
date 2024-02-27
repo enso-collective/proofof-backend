@@ -133,9 +133,13 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
 });
 
 const farcasterPost = async (text: string, replyTo: string, embeds?: EmbeddedCast[]) => {
-    const client = new NeynarAPIClient(NEYNAR_API_KEY!);
-    await client.publishCast(NEYNAR_SIGNER_UUID!, text, {
-        embeds: embeds,
-        replyTo: replyTo
-    });
+    try {
+        const client = new NeynarAPIClient(NEYNAR_API_KEY!);
+        await client.publishCast(NEYNAR_SIGNER_UUID!, text, {
+            embeds: embeds,
+            replyTo: replyTo
+        });
+    } catch(error) {
+        console.log(error);
+    }
 }
