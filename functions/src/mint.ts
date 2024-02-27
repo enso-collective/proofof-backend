@@ -2,7 +2,7 @@ import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from "ethers";
 import * as admin from 'firebase-admin';
 
-export async function eas_mint(cast_hash: string, fid: string, attest_wallet: string, cast_content: string, cast_image_link: string, assoc_brand: string) {
+export async function eas_mint(username: string, attest_wallet: string, post_url: string, post_image_link: string, post_content: string, quest_id: string, category: string) {
     //push to EAS either onchain or offchain. docs: https://docs.attest.sh/docs/tutorials/make-an-attestation
     const provider = ethers.getDefaultProvider(
         "base", {
@@ -17,21 +17,21 @@ export async function eas_mint(cast_hash: string, fid: string, attest_wallet: st
     const eas = new EAS("0x4200000000000000000000000000000000000021"); //https://docs.attest.sh/docs/quick--start/contracts#base
     eas.connect(signer);
 
-    const ts = Math.floor(Date.now() / 1000);
     
-    cast_hash = cast_hash.startsWith('0x') ? cast_hash.substring(2) : cast_hash; //depending on source, sometimes hash has 0x in it.
-    console.log(cast_hash);
+    //const nftStorageKey = process.env.NFTSTORAGE_API_KEY (is stored on Cloud Function already)
+    //const nftStorageURL = TODO upload image https://nft.storage/docs/client/js/#store---store-erc1155-nft-data
+
     // Initialize SchemaEncoder with the schema string
-    const schemaEncoder = new SchemaEncoder("uint32 timestamp, uint32 farcasterID, string castHash, string castTextContent, string castImageLink, string associatedBrand");
+    const schemaEncoder = new SchemaEncoder("bytes32 username,string postURL,string ipfsImageURL,string postContent,bytes32 questId");
     const encodedData = schemaEncoder.encodeData([
-        { name: "timestamp", value: ts, type: "uint32" }, //Unix timestamp in seconds
-        { name: "farcasterID", value: fid, type: "uint32" }, // one of these will be null
-        { name: "castHash", value: cast_hash, type: "string" }, 
-        { name: "castTextContent", value: cast_content, type: "string" }, 
-        { name: "castImageLink", value: cast_image_link, type: "string" },
-        { name: "associatedBrand", value: assoc_brand, type: "string" },
+        { name: "username", value: username, type: "uint32" }, 
+        { name: "postURL", value: post_url, type: "string" }, 
+        { name: "ipfsImageURL", value: post_image_link, type: "string" }, //TODO change to NFT.Storage for image
+        { name: "postContent", value: post_content, type: "string" },
+        { name: "questId", value: quest_id, type: "bytes32" },
     ]);
-    const SchemaUID = "0xd88b6019cbfad1a9b093f2b4dcd96e443923f3ed434ed1a01677e2558f0b1f9c";    
+    
+    const SchemaUID = "0x7f9aaf2fd9e8fc1682d8240fef5464093a60f127cb3661c863c7c621ab69af02";    
 
     const tx = await eas.attest({
         schema: SchemaUID,
@@ -42,25 +42,46 @@ export async function eas_mint(cast_hash: string, fid: string, attest_wallet: st
         },
     });
 
-    const db = admin.firestore();
-    const questRef = db.collection('Quest').doc(); 
-    const userRef = db.collection('User').doc(); 
-
-    await db.runTransaction(async (t) => {
-        t.set(questRef, {
-            castHash: cast_hash,
-            castContent: cast_content,
-            castImageLink: cast_image_link,
-            associatedBrand: assoc_brand
-        });
-        t.set(userRef, {
-            attestWallet: attest_wallet
-        });
-    });
+    let points = 0; // default value
+    switch (category) {
+        case 'general':
+            points = 10;
+            break;
+        case 'merch':
+            points = 5;
+            break;
+        case 'conference':
+            points = 15;
+            break;
+        default:
+            points = 5; // default value if none of the cases match
+    }
 
     console.log(tx);
     const newAttestationUID = await tx.wait();
     console.log("New attestation UID:", newAttestationUID);
     console.log(tx.tx.hash)
+
+    const db = admin.firestore();
+    const proofRef = db.collection('Proof').doc(); 
+    const userRef = db.collection('User').doc(); 
+
+    await db.runTransaction(async (t: admin.firestore.Transaction) => {
+        t.set(proofRef, {
+            username: username,
+            userWallet: attest_wallet,
+            postURL: post_url,
+            ipfsImageURL: post_image_link,
+            postContent: post_content,
+            points: points,
+            attestationUID: newAttestationUID,
+            transaction: tx.tx.hash
+        });
+        t.set(userRef, {
+            attestWallet: attest_wallet,
+            attestationUID: newAttestationUID
+        });
+    });
+
     return tx.tx.hash;
 }
