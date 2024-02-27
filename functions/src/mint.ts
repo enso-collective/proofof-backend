@@ -20,15 +20,16 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
     
     //const nftStorageKey = process.env.NFTSTORAGE_API_KEY (is stored on Cloud Function already)
     //const nftStorageURL = TODO upload image https://nft.storage/docs/client/js/#store---store-erc1155-nft-data
-
+    const bytes32username = username.substring(0, 32);
+    const bytes32quest = quest_id.substring(0, 32);;
     // Initialize SchemaEncoder with the schema string
     const schemaEncoder = new SchemaEncoder("bytes32 username,string postURL,string ipfsImageURL,string postContent,bytes32 questId");
     const encodedData = schemaEncoder.encodeData([
-        { name: "username", value: username, type: "uint32" }, 
+        { name: "username", value: bytes32username, type: "bytes32" }, 
         { name: "postURL", value: post_url, type: "string" }, 
         { name: "ipfsImageURL", value: post_image_link, type: "string" }, //TODO change to NFT.Storage for image
         { name: "postContent", value: post_content, type: "string" },
-        { name: "questId", value: quest_id, type: "bytes32" },
+        { name: "questId", value: bytes32quest, type: "bytes32" },
     ]);
     
     const SchemaUID = "0x7f9aaf2fd9e8fc1682d8240fef5464093a60f127cb3661c863c7c621ab69af02";    
