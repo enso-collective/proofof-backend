@@ -85,17 +85,17 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
         messages: [{ 
             role: 'user', 
             content: [ 
-                { type: 'text', text: `You are a decision-maker for a social company, where users submit an IMAGE with a DESCRIPTION. The DESCRIPTION must mention a BRAND "${brandName}" that they claim is visible in the IMAGE, and you decide whether the user's claim is true and therefore VALID or not true and so therefore NOT VALID .
+                { type: 'text', text: `You are a decision-maker for a social company, where users submit an IMAGE with a DESCRIPTION. The DESCRIPTION may mention a BRAND "${brandName}" that they claim is visible in the IMAGE, and you decide whether the user's claim is true and therefore VALID or not true and so therefore NOT VALID. You may not recognize the Brand name or the logos, as they are very new. 
                 Here is the original user DESCRIPTION: "${data.message}" 
                 
                 For this image, think through what is the full list of every piece of clothing, apparel, visible signage, and items in the image. 
-                Special brands to note: the SheFi brand has tie-dye bucket hats, beanies, and shirts, the Metamask brand logo has a cartoon image of a fox, the Infura brand logo has an black/orange japanese symbol, the Consensys brand logo has a small square outside of a circle, and the Mesh brand logo has 3 connected ovals.
+                Special brands to note: the SheFi brand has a logo that says SheFi and has products such as tie-dye bucket hats, beanies, and shirts, the Metamask brand logo has a cartoon image of a fox, the Infura brand logo has an black/orange japanese symbol, the Consensys brand logo has a small square outside of a circle, and the Mesh brand logo has 3 connected ovals.
                 
                 The CATEGORY of the image is either "merch" if it is a closeup of clothes, or "conference" if it is of a group of people or people listening to a speaker. If it is neither, it is "general".
 
                 After thinking of the CATEGORY, can you answer TRUE or FALSE to each of the two following questions: 
                 1) Is the user's DESCRIPTION of the IMAGE generally correct, and without any false statements? For example, if they describe a swimsuit but the image contains a jacket, this would be FALSE. 
-                2) Is the BRAND "${brandName}" visible and present in the image? 
+                2) Is the BRAND "${brandName}" name or logo visible and present in the image? 
                 Note: If the brand name or logo is not directly visible or legible, but it could plausibly be correct based on the type of items/clothing, then trust the user and answer TRUE.
                 
                 Think step by step. If the answer to one or both questions is FALSE, then the claim is NOT VALID. If the answer to both questions is TRUE than the claim is VALID.
