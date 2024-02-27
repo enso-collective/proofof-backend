@@ -21,7 +21,7 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
         message: req.body.data.text,
         embedUrl: req.body.data.embeds?.at(0)?.url,
         hash: req.body.data.hash,
-        wallet: req.body.data.author.verifications?.at(0),
+        wallet: req.body.data.author.verifications?.at(0), //TODO add check for Solana wallet
     });
 
     console.log(data);
@@ -52,15 +52,15 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
     const extractBrandQuery = await openai.chat.completions.create({
         messages: [{ 
             role: 'assistant', 
-            content: `A user supplied the a description which is meant to contain a brand name. Your job is to choose the primary brand they are describing. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi` 
+            content: `A user supplied the a description which contains a primary brand name about an image attached to the description. Without seeing the image, your job is to choose the primary brand they are describing. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi` 
         }, 
         { 
             role: 'system', 
-            content: `Return ONLY the brand name in plain text, or an empty response if no brands are mentioned` 
+            content: `A user supplied the a description which contains a primary brand name about an image attached to the description. Without seeing the image, your job is to choose the primary brand they are describing. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. Return ONLY the brand name in plain text, or an empty response if no brands are mentioned. ` 
         }, 
         {
             role: 'user',
-            content: `A user supplied the following description which is meant to contain a brand name. Your job is to choose the primary brand they are describing. If you are unsure, or if no brands are mentioned, then return an empty response. 
+            content: `A user supplied the following description which is meant to contain a brand name. Your job is to choose the primary brand they are describing. If no brands are mentioned, then return an empty response. 
 
             User description: ${data.message}`
         }],
@@ -90,8 +90,10 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
                 
                 For this image, think through what is the full list of every piece of clothing, apparel, visible signage, and items in the image. 
                 Special brands to note: the SheFi brand has tie-dye bucket hats, beanies, and shirts, the Metamask brand logo has a cartoon image of a fox, the Infura brand logo has an black/orange japanese symbol, the Consensys brand logo has a small square outside of a circle, and the Mesh brand logo has 3 connected ovals.
-                 
-                After thinking of that, can you answer TRUE or FALSE to each of the two following questions: 
+                
+                The CATEGORY of the image is either "merch" if it is a closeup of clothes, or "conference" if it is of a group of people or people listening to a speaker. If it is neither, it is "general".
+
+                After thinking of the CATEGORY, can you answer TRUE or FALSE to each of the two following questions: 
                 1) Is the user's DESCRIPTION of the IMAGE generally correct, and without any false statements? For example, if they describe a swimsuit but the image contains a jacket, this would be FALSE. 
                 2) Is the BRAND "${brandName}" visible and present in the image? 
                 Note: If the brand name or logo is not directly visible or legible, but it could plausibly be correct based on the type of items/clothing, then trust the user and answer TRUE.
@@ -99,8 +101,8 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
                 Think step by step. If the answer to one or both questions is FALSE, then the claim is NOT VALID. If the answer to both questions is TRUE than the claim is VALID.
                 Then, your response is one of the two options: Either say:
                 1. "NOT VALID - [reason]"
-                2. "VALID - [BRAND name] + [item]"
-                Substitute the appropriate responses into the brackets. For [item] insert the item that displays or matches the BRAND.
+                2. "VALID - brand:[BRAND name] and category:[CATEGORY]"
+                Substitute the appropriate responses into the brackets.
                 Respond with NOT VALID if the brand listed is definitely not in the image, because of [reason].
                 
                 EXAMPLES:
@@ -115,12 +117,16 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
     const brandValidation = validateBrandQuery.choices.at(0)?.message.content
     if (typeof brandValidation !== 'string' || (typeof brandValidation === 'string' && brandValidation.includes('NOT VALID'))) {
         // reply in farcaster
-        await farcasterPost(`@${data.username} we found a result of "${brandValidation}". Please try again with a different image or description.`, data.hash)
+        await farcasterPost(`@${data.username} the AI analysis of your description & image determined it to be "${brandValidation}" for a Proof. Please try again with a different image or description.`, data.hash)
         res.send({ success: false});
         return
     }
+    const categoryMatch = brandValidation?.match(/category:\[(.*?)\]/i);
+    const category = categoryMatch ? categoryMatch[1] : 'general';
 
-    const hash = await eas_mint(data.hash, data.fid, data.wallet, data.message, data.embedUrl, brandName);
+    const questID = "general";
+    const castURL = "https://warpcast.com/${data.fname}/0x${data.hash.substring(0, 8)}";
+    const hash = await eas_mint(data.username, data.wallet, castURL, data.embedUrl, data.message, questID, category);
 
     await farcasterPost(`@${data.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}])
     res.send({ success: true });
