@@ -125,7 +125,7 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
     const category = categoryMatch ? categoryMatch[1] : 'general';
 
     const questID = "general";
-    const castURL = `https://warpcast.com/${data.fname}/0x${data.hash.substring(0, 8)}`;
+    const castURL = `https://warpcast.com/${data.username}/0x${data.hash.substring(0, 8)}`;
     const hash = await eas_mint(data.username, data.wallet, castURL, data.embedUrl, data.message, questID, category);
 
     await farcasterPost(`@${data.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}])
