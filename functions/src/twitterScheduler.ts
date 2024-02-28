@@ -9,7 +9,6 @@ const TWITTER_API_KEY = process.env.TWITTER_API_KEY
 const TWITTER_API_SECRET_KEY = process.env.TWITTER_API_SECRET_KEY
 const TWITTER_API_BEARER_KEY = process.env.TWITTER_API_BEARER_KEY
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-// const ENSO_API_KEY = process.env.ENSO_API_KEY;
 
 export const twitterScheduler = onSchedule('* * * * *', async (event) => {
     const twitterSettingsCollection = admin.firestore().collection('twitterSettings');
@@ -67,6 +66,8 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             });
         }
 
+        const userCollection = admin.firestore().collection('User');
+
         const media = mentions.includes?.media ?? []
         const users = mentions.includes?.users ?? []
 
@@ -74,6 +75,13 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             console.log(element);
 
             const user = users.find(x => x.id === element.author_id);
+            const usersSnapshot = await userCollection.where('ftwitterUsernameid', '==', user?.username).get()
+            if (usersSnapshot.empty) {
+                userClient.tweets.createTweet({ text: `A connected wallet is required for your onchain Proof, please sign up on https://shefi.ensocollective.xyz and connect your Twitter`, reply: { in_reply_to_tweet_id: element.id } });
+                return;
+            }
+
+            const wallet = usersSnapshot.docs![0].data().userWalletToLowerCase;
 
             const mediaKeys = element.attachments?.media_keys ?? [];
             const photo = media.find(x => mediaKeys.includes(x.media_key ?? '') && x.type === 'photo') as components['schemas']['Photo'];
@@ -169,10 +177,8 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             }
 
             const tweetUrl = `https://twitter.com/${user?.username}/status/${newestId}`;
-            // const hash = await eas_mint(user?.username!, data.wallet, tweetUrl, photo.url!, element.text, questId);
-       // });
-
-         // TODO:   userClient.tweets.createTweet({ text: `@${user?.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}]), reply: { in_reply_to_tweet_id: element.id } });
+            const hash = await eas_mint(user?.username!, wallet, tweetUrl, photo.url!, element.text, questId);
+            userClient.tweets.createTweet({ text: `@${user?.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, reply: { in_reply_to_tweet_id: element.id } });
         });
     } catch(error) {
         console.log(error);
