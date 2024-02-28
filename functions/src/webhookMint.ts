@@ -46,7 +46,7 @@ export async function webhook_mint(attest_wallet: string, company: string, quest
     const db = admin.firestore();
     try {
         const proofRef = db.collection('Proof').doc(); 
-        const userSnapshot = await db.collection('User').where('attestWallet', '==', attest_wallet).get();
+        const userSnapshot = await db.collection('User').where('userWallet', '==', attest_wallet).get();
 
         if (userSnapshot.empty) {
             const newUserRef = db.collection('User').doc(); // Create a new document reference for the new user
