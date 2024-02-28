@@ -80,9 +80,9 @@ export const attest_poap = functions.https.onRequest(async (req, res) => {
                     console.log("minting to: ", userWallet);
                 }
             }
-    console.log("entering while loop")
         while (result.hasNextPage) {
-        
+            console.log("entering while loop")
+
 
             // Fetch the next page
             const nextPage = await result.getNextPage();
