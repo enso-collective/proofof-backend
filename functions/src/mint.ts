@@ -52,7 +52,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
     const db = admin.firestore();
     try {
         const proofRef = db.collection('Proof').doc(); 
-        const userSnapshot = await db.collection('User').where('attestWallet', '==', attest_wallet).get();
+        const userSnapshot = await db.collection('User').where('userWallet', '==', attest_wallet).get();
 
         if (userSnapshot.empty) {
             const newUserRef = db.collection('User').doc(); // Create a new document reference for the new user
@@ -73,7 +73,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
                 });
                 t.set(newUserRef, {
                     proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
-                    attestWallet: attest_wallet,
+                    userWallet: attest_wallet,
                     attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                     points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });

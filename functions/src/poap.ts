@@ -61,7 +61,7 @@ export const attest_poap = functions.https.onRequest(async (req, res) => {
                 console.log(userWallet);
                 //check if wallet already has EAS for the poapID
                 const db = admin.firestore();
-                const userSnapshot = await db.collection('User').where('attestWallet', '==', userWallet).get();
+                const userSnapshot = await db.collection('User').where('userWallet', '==', userWallet).get();
                 if (!userSnapshot.empty) {
                     // Found a user with the matching attest_wallet
                     const userDoc = userSnapshot.docs[0];
@@ -80,9 +80,9 @@ export const attest_poap = functions.https.onRequest(async (req, res) => {
                     console.log("minting to: ", userWallet);
                 }
             }
-    console.log("entering while loop")
         while (result.hasNextPage) {
-        
+            console.log("entering while loop")
+
 
             // Fetch the next page
             const nextPage = await result.getNextPage();
@@ -94,7 +94,7 @@ export const attest_poap = functions.https.onRequest(async (req, res) => {
                 console.log(userWallet);
                 //check if wallet already has EAS for the poapID
                 const db = admin.firestore();
-                const userSnapshot = await db.collection('User').where('attestWallet', '==', userWallet).get();
+                const userSnapshot = await db.collection('User').where('userWallet', '==', userWallet).get();
                 if (!userSnapshot.empty) {
                     // Found a user with the matching attest_wallet
                     const userDoc = userSnapshot.docs[0];

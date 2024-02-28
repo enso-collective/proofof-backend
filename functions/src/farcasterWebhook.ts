@@ -8,6 +8,7 @@ import {
     farcasterWebhookInput
   } from './schemes';
 import { EmbeddedCast } from '@neynar/nodejs-sdk/build/neynar-api/v2';
+import { Embeddings } from 'openai/resources';
 
 const NEYNAR_API_KEY =  process.env.NEYNAR_API_KEY;
 const NEYNAR_SIGNER_UUID = process.env.NEYNAR_SIGNER_UUID;
@@ -88,7 +89,7 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
                 { type: 'text', text: `You are a decision-maker for a social company, where users submit an IMAGE with a DESCRIPTION. The DESCRIPTION may mention a BRAND "${brandName}" that they claim is visible in the IMAGE, and you decide whether the user's claim is true and therefore VALID or not true and so therefore NOT VALID. You may not recognize the Brand name or the logos, as they are very new. 
                 Here is the original user DESCRIPTION: "${data.message}" 
                 
-                For this image, think through what is the full list of every piece of clothing, apparel, visible signage, and items in the image. 
+                For this image, think through what is the full list of every piece of clothing, apparel, visible signage, logos, and items in the image. 
                 Special brands to note: the SheFi brand has a logo that says SheFi and has products such as blue bucket hats, beanies, and shirts. The Linea brand does bracelets, and Paypal has beanies, Capsule has pens, Phaver has a black sweatshirt, WalletConnect has a water bottle and tote bags.
                 
                 You need to think whether you would answer TRUE or FALSE to each of the two following questions: 
@@ -107,6 +108,7 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
                 If the image has DESCRIPTION of the brand Ray-Ban, and there are no sunglasses visible in the image, then respond "NOT VALID - no Ray-Ban sunglasses visible".
                 If the image has the claim of the brand Ray-Ban, and there are sunglasses visible in the image but hard to tell what brand they are, which could be because there is no brand label visible or the item is small, then respond with "VALID - Ray-Ban, sunglasses".
                 If the DESCRIPTION says a swimsuit but the image contains a jacket, this would be "NOT VALID - image does not match description".`},
+                { type: 'image_url', image_url: { url: data.embedUrl! } }
             ],
         }]
     });
