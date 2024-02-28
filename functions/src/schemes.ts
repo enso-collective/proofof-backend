@@ -14,6 +14,7 @@ const attestationInput = z.object({
   key: z.string(),
   quest: z.string(),
   data: z.array(z.string()),
+  userWallet: z.string()
 });
 
 export {

@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions/v2';
 import * as admin from 'firebase-admin';
-import { eas_mint } from './mint'
+import { webhook_mint } from './webhookMint'
 import { attestationInput } from './schemes';
 
 export const attestation = functions.https.onRequest(async (req, res) => {
@@ -8,7 +8,8 @@ export const attestation = functions.https.onRequest(async (req, res) => {
         const data = attestationInput.parse({
             key: req.body.key,
             quest: req.body.quest,
-            data: req.body.data
+            data: req.body.data,
+            userWallet: req.body.wallet
         });
 
         const apiUsersCollection =  admin.firestore().collection('apiUsers');
@@ -17,12 +18,12 @@ export const attestation = functions.https.onRequest(async (req, res) => {
             res.status(401).send("Unauthorized");
         }
 
-        // const apiUser = apiUsersSnapshot.docs[0].data();
-        // apiUser.company
-        // apiUser.wallet
+        const apiUser = apiUsersSnapshot.docs[0].data();
 
-        // await eas_mint()
-        res.json({  })
+        const hash = await webhook_mint(data.userWallet, apiUser.company, data.quest, data.data);
+        const url = `https://www.onceupon.gg/${hash}`;
+
+        res.json({ success: true, url: url});
     } catch(error) {
         res.status(500).send(error);
     }

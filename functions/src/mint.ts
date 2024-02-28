@@ -74,11 +74,15 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
             postURL: post_url,
             ipfsImageURL: post_image_link,
             postContent: post_content,
-            points: points,
+            pointValue: points,
+            timestamp: Date.now(),
             attestationUID: newAttestationUID,
-            transaction: tx.tx.hash
+            transaction: tx.tx.hash,
+            questId: quest_id,
+            image: true
         });
         t.set(userRef, {
+            proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
             attestWallet: attest_wallet,
             attestationUID: newAttestationUID
         });
