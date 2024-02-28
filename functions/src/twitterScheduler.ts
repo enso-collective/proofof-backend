@@ -14,8 +14,6 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 export const twitterScheduler = onSchedule('* * * * *', async (event) => {
     const twitterSettingsCollection = admin.firestore().collection('twitterSettings');
 
-    console.log('1');
-
     await admin.firestore().runTransaction(async t => {
         const twitterSetings = await t.get(twitterSettingsCollection.doc('settings'));
         const token = twitterSetings.data()?.token;
@@ -51,16 +49,12 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
         token: token
     });
 
-    console.log('4');
-
     try {
         const appClient = new Client(TWITTER_API_BEARER_KEY!);
         const userClient = new Client(authClient);
 
-        console.log('5');
-        const mentions = await appClient.tweets.usersIdMentions('1758104296208396288', { start_time: '2024-01-20T07:05:14.227Z', since_id: lastMentionTweetId, expansions: ['author_id', 'entities.mentions.username', 'attachments.media_keys'], 'media.fields': ['url', 'type', 'variants', 'preview_image_url'], 'user.fields': ['username', 'id', 'name'], 'tweet.fields': ['attachments', 'author_id', 'text', 'id'] });
+        const mentions = await appClient.tweets.usersIdMentions('1758104296208396288', { start_time: '2024-01-27T07:05:14.227Z', since_id: lastMentionTweetId, expansions: ['author_id', 'entities.mentions.username', 'attachments.media_keys'], 'media.fields': ['url', 'type', 'variants', 'preview_image_url'], 'user.fields': ['username', 'id', 'name'], 'tweet.fields': ['attachments', 'author_id', 'text', 'id'] });
         let newestId = mentions.meta?.newest_id;
-        console.log('6');
 
         if (newestId !== undefined && twitterSettingsData === undefined) {
             const newTwitterSettings = {
@@ -127,13 +121,13 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
                 messages: [{ 
                     role: 'user', 
                     content: [ 
-                        { type: 'text', text: `You are a decision-maker for a social company, where users submit an IMAGE with a DESCRIPTION. The DESCRIPTION must mention a BRAND "${brandName}" that they claim is visible in the IMAGE, and you decide whether the user's claim is true and therefore VALID or not true and so therefore NOT VALID .
+                        {  type: 'text', text: `You are a decision-maker for a social company, where users submit an IMAGE with a DESCRIPTION. The DESCRIPTION may mention a BRAND "${brandName}" that they claim is visible in the IMAGE, and you decide whether the user's claim is true and therefore VALID or not true and so therefore NOT VALID. You may not recognize the Brand name or the logos, as they are very new. 
                         Here is the original user DESCRIPTION: "${element.text}" 
                         
                         For this image, think through what is the full list of every piece of clothing, apparel, visible signage, logos, and items in the image. 
                         Special brands to note: the SheFi brand has a logo that says SheFi and has products such as blue bucket hats, beanies, and shirts. The Linea brand does bracelets, and Paypal has beanies, Capsule has pens, Phaver has a black sweatshirt, WalletConnect has a water bottle and tote bags.
                         
-                        After thinking of that, can you answer TRUE or FALSE to each of the two following questions: 
+                        You need to think whether you would answer TRUE or FALSE to each of the two following questions: 
                         1) Is the user's DESCRIPTION of the IMAGE generally correct, and without any false statements? For example, if they describe a swimsuit but the image contains a man in a business suit, this would be FALSE. 
                         2) Is the BRAND "${brandName}" name or logo visible and present in the image? 
                         Note: If the brand name or logo is not directly visible or legible, but it could plausibly be correct based on the type of items/clothing, then trust the user and answer TRUE.
@@ -142,7 +136,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
                         Then, your response is one of the two options: Either say:
                         1. "NOT VALID - [reason]"
                         2. "VALID - [BRAND name]"
-                        Substitute the appropriate responses into the brackets. For [item] insert the item that displays or matches the BRAND.
+                        Substitute the appropriate responses into the brackets. 
                         Respond with NOT VALID if the brand listed is definitely not in the image, because of [reason].
                         
                         EXAMPLES:
@@ -160,6 +154,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
                 userClient.tweets.createTweet({ text: `@${user?.username} the AI analysis of your description & image determined it to be "${brandValidation}" for a Proof. Please try again with a different image or description.`, reply: { in_reply_to_tweet_id: element.id } });
                 return;
             }
+            
             const questBrands = ["SheFi", "Linea", "Capsule", "Phaver", "WalletConnect", "Harpie", "Paypal", "PYUSD", "Enso", "Hyperlane", "Base"];
             let questId;
             const brandNameLower = brandName.toLowerCase();
@@ -173,10 +168,9 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             } else {
                 questId = "general";
             }
-            //const castURL = `https://warpcast.com/${data.username}/0x${data.hash.substring(2, 10)}`;
-            // const tweetURL = `TODO`
-            // TODO fix for twitter: const hash = await eas_mint(data.username, data.wallet, castURL, data.embedUrl, data.message, questId);
-            //res.send({ success: true });
+
+            const tweetUrl = `https://twitter.com/${user?.username}/status/${newestId}`;
+            // const hash = await eas_mint(user?.username!, data.wallet, tweetUrl, photo.url!, element.text, questId);
        // });
 
          // TODO:   userClient.tweets.createTweet({ text: `@${user?.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}]), reply: { in_reply_to_tweet_id: element.id } });
