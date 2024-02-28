@@ -1,4 +1,3 @@
-const { request } = require('graphql-request');
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from "ethers";
 import * as admin from 'firebase-admin';
@@ -38,10 +37,8 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
 
     const points = 5;
 
-    console.log(tx);
     const newAttestationUID = await tx.wait();
     console.log("New attestation UID:", newAttestationUID);
-    console.log(tx.tx.hash)
 
     const db = admin.firestore();
     try {
@@ -63,6 +60,7 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
                 t.set(newUserRef, {
                     proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                     attestWallet: attest_wallet,
+                    poapId: admin.firestore.FieldValue.arrayUnion(poap_id),
                     attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                     points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });
@@ -83,6 +81,7 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
             t.set(userRef, {
                 proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                 attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
+                poapId: admin.firestore.FieldValue.arrayUnion(poap_id),
                 points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });
             });

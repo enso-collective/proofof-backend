@@ -15,16 +15,17 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@airstack/node": "^0.0.5",
+    "@ethereum-attestation-service/eas-sdk": "^1.4.2",
     "@neynar/nodejs-sdk": "^1.10.0",
     "auth0": "^3.6.0",
     "axios": "^1.6.1",
+    "ethers": "^6.11.0",
     "firebase-admin": "^10.0.2",
     "firebase-functions": "^3.18.0",
     "openai": "^4.28.0",
     "twitter-api-sdk": "^1.2.1",
-    "zod": "^3.22.4",
-    "@ethereum-attestation-service/eas-sdk": "^1.4.2",
-    "ethers": "^6.11.0"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/auth0": "^3.3.3",
