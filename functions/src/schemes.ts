@@ -10,6 +10,13 @@ const farcasterWebhookInput = z.object({
   wallet: z.string().optional(),
 });
 
+const attestationInput = z.object({
+  key: z.string(),
+  quest: z.string(),
+  data: z.array(z.string()),
+});
+
 export {
   farcasterWebhookInput,
+  attestationInput,
 };
