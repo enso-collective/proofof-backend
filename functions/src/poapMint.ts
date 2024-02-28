@@ -23,6 +23,7 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
         { name: "poapName", value: poap_name, type: "string" }, 
         { name: "poapId", value: poap_id, type: "bytes32" }
     ]);
+    console.log("encodeddata=", encodedData)
     
     const SchemaUID = "0x326d3cdd4aa05f0c47d6e33059435a50e735c88f2485cca6d0ebcb001e636a92";    
 
