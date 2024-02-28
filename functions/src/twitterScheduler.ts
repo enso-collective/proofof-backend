@@ -95,15 +95,15 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             const extractBrandQuery = await openai.chat.completions.create({
                 messages: [{ 
                     role: 'assistant', 
-                    content: `A user supplied the a description which contains a primary brand name about an image attached to the description. Without seeing the image, your job is to choose the primary brand they are describing. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi`
+                    content: `A user supplied the a description which contains either a primary brand name about an image attached to the description, or describes a moment in their life they are taking a picture of for a "quest". Without seeing the image, your job is to choose the primary brand they are describing, or the quest they are completing. Note: there are some new brand names to learn: SheFi, Harpie, WalletConnect, Phaver, Linea, Capsule. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. The quests are either #photobooth, #newfriend, or #shefipanel`
                 }, 
                 { 
                     role: 'system', 
-                    content: `A user supplied the a description which contains a primary brand name about an image attached to the description. Without seeing the image, your job is to choose the primary brand they are describing. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. Return ONLY the brand name in plain text, or an empty response if no brands are mentioned. ` 
+                    content: `A user supplied the a description which contains either a primary brand name about an image attached to the description, or describes a moment in their life they are taking a picture of for a "quest". Without seeing the image, your job is to choose the primary brand they are describing. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. Return ONLY the brand name in plain text, or an empty response if no brands are mentioned.  The quests are either #photobooth, #newfriend, or #shefipanel.  If they mention any of those, return the same response without the # tag. ` 
                 }, 
                 {
                     role: 'user',
-                    content: `A user supplied the following description which is meant to contain a brand name. Your job is to choose the primary brand they are describing. If no brands are mentioned, then return an empty response. If they say "[Brand] at the SheFi Summit" then choose the [Brand]. 
+                    content: `A user supplied the following description which is meant to either contain a brand name, or describes a moment in their life they are taking a picture of for a "quest". Your job is to choose the primary brand they are describing or quest. If no brands or quests are mentioned, then return an empty response. If they say "[Brand] at the SheFi Summit" then choose the [Brand].  The quests are either #photobooth, #newfriend, or #shefipanel. If they mention any of those, return the same response without the # tag, such as "newfriend". 
 
                     User description: ${element.text}`
                 }],
@@ -115,8 +115,8 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
 
             if (typeof brandName !== 'string' || (typeof brandName === 'string' && brandName.trim().length == 0)) {
                 // reply in twitter
-                userClient.tweets.createTweet({ text: `We didn't find a clear brand described in your tweet @${user?.username}. Please retry your tweet with more specific description of the brand.`, reply: { in_reply_to_tweet_id: element.id } });
-                console.log('cannot extract brand name')
+                userClient.tweets.createTweet({ text: `We didn't find a clear brand or quest described in your tweet @${user?.username}. Please retry your tweet with more specific description of the brand or the quest hashtag.`, reply: { in_reply_to_tweet_id: element.id } });
+                console.log('cannot extract brand nam or quest')
 
                 return;
             }
@@ -127,7 +127,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
                 messages: [{ 
                     role: 'user', 
                     content: [ 
-                        { type: 'text', text: `You are a decision-maker for a social company, where users submit an IMAGE with a DESCRIPTION. The DESCRIPTION must mention a BRAND "${brandName}" that they claim is visible in the IMAGE, and you decide whether the user's claim is true and therefore VALID or not true and so therefore NOT VALID .
+                        { type: 'text', text: `You are a decision-maker for a social company, where users submit an IMAGE with a DESCRIPTION. The DESCRIPTION must mention a BRAND "${brandName}" that they claim is visible in the IMAGE, or a QUEST they are completing such as #photobooth. And you decide whether the user's claim is true and therefore VALID or not true and so therefore NOT VALID .
                         Here is the original user DESCRIPTION: "${element.text}" 
                         
                         For this image, think through what is the full list of every piece of clothing, apparel, visible signage, logos, and items in the image. 
@@ -135,14 +135,14 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
                         
                         After thinking of that, can you answer TRUE or FALSE to each of the two following questions: 
                         1) Is the user's DESCRIPTION of the IMAGE generally correct, and without any false statements? For example, if they describe a swimsuit but the image contains a man in a business suit, this would be FALSE. 
-                        2) Is the BRAND "${brandName}" name or logo visible and present in the image? 
+                        2) Either is the BRAND "${brandName}" name or logo visible and present in the image, or is the QUEST "${brandName}" correct?
                         Note: If the brand name or logo is not directly visible or legible, but it could plausibly be correct based on the type of items/clothing, then trust the user and answer TRUE.
                         
                         Think step by step. If the answer to one or both questions is FALSE, then the claim is NOT VALID. If the answer to both questions is TRUE than the claim is VALID.
                         Then, your response is one of the two options: Either say:
                         1. "NOT VALID - [reason]"
-                        2. "VALID - [BRAND name]"
-                        Substitute the appropriate responses into the brackets. For [item] insert the item that displays or matches the BRAND.
+                        2. "VALID - [BRAND/QUEST name]"
+                        Substitute the appropriate responses into the brackets.
                         Respond with NOT VALID if the brand listed is definitely not in the image, because of [reason].
                         
                         EXAMPLES:
@@ -160,7 +160,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
                 userClient.tweets.createTweet({ text: `@${user?.username} the AI analysis of your description & image determined it to be "${brandValidation}" for a Proof. Please try again with a different image or description.`, reply: { in_reply_to_tweet_id: element.id } });
                 return;
             }
-            const questBrands = ["SheFi", "Linea", "Capsule", "Phaver", "WalletConnect", "Harpie", "Paypal", "PYUSD", "Enso", "Hyperlane", "Base"];
+            const questBrands = ["SheFi", "Linea", "Capsule", "Phaver", "WalletConnect", "Harpie", "Paypal", "PYUSD", "Enso", "Hyperlane", "Base", "photobooth", "newfriend", "shefipanel"];
             let questId;
             const brandNameLower = brandName.toLowerCase();
 
