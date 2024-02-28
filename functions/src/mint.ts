@@ -61,6 +61,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
                 t.set(proofRef, {
                     username: username,
                     userWallet: attest_wallet,
+                    userWalletLower: attest_wallet.toLowerCase(),
                     postURL: post_url,
                     ipfsImageURL: post_image_link,
                     postContent: post_content,
@@ -74,6 +75,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
                 t.set(newUserRef, {
                     proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                     userWallet: attest_wallet,
+                    userWalletLower: attest_wallet.toLowerCase(),
                     attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                     points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });
@@ -86,6 +88,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
             t.set(proofRef, {
                 username: username,
                 userWallet: attest_wallet,
+                userWalletLower: attest_wallet.toLowerCase(),
                 postURL: post_url,
                 ipfsImageURL: post_image_link,
                 postContent: post_content,
