@@ -17,6 +17,13 @@ const attestationInput = z.object({
   userWallet: z.string()
 });
 
+const poapInput = z.object({
+  key: z.string(),
+  quest: z.string(),
+  data: z.array(z.string()),
+  userWallet: z.string()
+});
+
 export {
   farcasterWebhookInput,
   attestationInput,

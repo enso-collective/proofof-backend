@@ -1,8 +1,9 @@
+const { request } = require('graphql-request');
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from "ethers";
 import * as admin from 'firebase-admin';
 
-export async function webhook_mint(attest_wallet: string, company: string, quest: string, data: string[]) {
+export async function poap_mint(attest_wallet: string, poap_id: string, poap_name: string) {
     //push to EAS either onchain or offchain. docs: https://docs.attest.sh/docs/tutorials/make-an-attestation
     const provider = ethers.getDefaultProvider(
         "base", {
@@ -18,14 +19,13 @@ export async function webhook_mint(attest_wallet: string, company: string, quest
     eas.connect(signer);
 
         // Initialize SchemaEncoder with the schema string
-    const schemaEncoder = new SchemaEncoder("string company,string quest,string[] data");
+    const schemaEncoder = new SchemaEncoder("string poapName,bytes32 poapId");
     const encodedData = schemaEncoder.encodeData([
-        { name: "company", value: company, type: "string" }, 
-        { name: "quest", value: quest, type: "string" }, 
-        { name: "data", value: data, type: "string[]" }
+        { name: "poapName", value: poap_name, type: "string" }, 
+        { name: "poapId", value: poap_id, type: "bytes32" }
     ]);
     
-    const SchemaUID = "0x2710384e4cd3a480f1daeb7418dd9449689413e26f146474f746d6e5b1d1f195";    
+    const SchemaUID = "0x326d3cdd4aa05f0c47d6e33059435a50e735c88f2485cca6d0ebcb001e636a92";    
 
     const tx = await eas.attest({
         schema: SchemaUID,
@@ -53,10 +53,7 @@ export async function webhook_mint(attest_wallet: string, company: string, quest
 
             await db.runTransaction(async (t: admin.firestore.Transaction) => {
                 t.set(proofRef, {
-                    company: company,
                     userWallet: attest_wallet,
-                    quest: quest,
-                    data: data,
                     pointValue: points,
                     timestamp: Date.now(),
                     attestationUID: newAttestationUID,
@@ -76,10 +73,7 @@ export async function webhook_mint(attest_wallet: string, company: string, quest
     
         await db.runTransaction(async (t: admin.firestore.Transaction) => {
             t.set(proofRef, {
-                company: company,
                 userWallet: attest_wallet,
-                quest: quest,
-                data: data,
                 pointValue: points,
                 timestamp: Date.now(),
                 attestationUID: newAttestationUID,

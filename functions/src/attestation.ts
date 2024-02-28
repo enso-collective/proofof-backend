@@ -11,7 +11,7 @@ export const attestation = functions.https.onRequest(async (req, res) => {
             data: req.body.data,
             userWallet: req.body.wallet
         });
-
+        console.log(data);
         const apiUsersCollection =  admin.firestore().collection('apiUsers');
         const apiUsersSnapshot = await apiUsersCollection.where('key', '==', data.key).get();
         if (apiUsersSnapshot.docs.length == 0) {
@@ -19,9 +19,12 @@ export const attestation = functions.https.onRequest(async (req, res) => {
         }
 
         const apiUser = apiUsersSnapshot.docs[0].data();
+        console.log(apiUser);
 
         const hash = await webhook_mint(data.userWallet, apiUser.company, data.quest, data.data);
+        console.log(hash);
         const url = `https://www.onceupon.gg/${hash}`;
+        console.log(url);
 
         res.json({ success: true, url: url});
     } catch(error) {

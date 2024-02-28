@@ -64,29 +64,61 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
     console.log(tx.tx.hash)
 
     const db = admin.firestore();
-    const proofRef = db.collection('Proof').doc(); 
-    const userRef = db.collection('User').doc(); 
+    try {
+        const proofRef = db.collection('Proof').doc(); 
+        const userSnapshot = await db.collection('User').where('attestWallet', '==', attest_wallet).get();
 
-    await db.runTransaction(async (t: admin.firestore.Transaction) => {
-        t.set(proofRef, {
-            username: username,
-            userWallet: attest_wallet,
-            postURL: post_url,
-            ipfsImageURL: post_image_link,
-            postContent: post_content,
-            pointValue: points,
-            timestamp: Date.now(),
-            attestationUID: newAttestationUID,
-            transaction: tx.tx.hash,
-            questId: quest_id,
-            image: true
-        });
-        t.set(userRef, {
-            proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
-            attestWallet: attest_wallet,
-            attestationUID: newAttestationUID
-        });
-    });
+        if (userSnapshot.empty) {
+            const newUserRef = db.collection('User').doc(); // Create a new document reference for the new user
 
+            await db.runTransaction(async (t: admin.firestore.Transaction) => {
+                t.set(proofRef, {
+                    username: username,
+                    userWallet: attest_wallet,
+                    postURL: post_url,
+                    ipfsImageURL: post_image_link,
+                    postContent: post_content,
+                    pointValue: points,
+                    timestamp: Date.now(),
+                    attestationUID: newAttestationUID,
+                    transaction: tx.tx.hash,
+                    questId: quest_id,
+                    image: true
+                });
+                t.set(newUserRef, {
+                    proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
+                    attestWallet: attest_wallet,
+                    attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
+                    points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
+                }, { merge: true });
+            });
+    } else {
+        // Found a user with the matching attest_wallet
+        const userRef = userSnapshot.docs[0].ref;
+    
+        await db.runTransaction(async (t: admin.firestore.Transaction) => {
+            t.set(proofRef, {
+                username: username,
+                userWallet: attest_wallet,
+                postURL: post_url,
+                ipfsImageURL: post_image_link,
+                postContent: post_content,
+                pointValue: points,
+                timestamp: Date.now(),
+                attestationUID: newAttestationUID,
+                transaction: tx.tx.hash,
+                questId: quest_id,
+                image: true
+            });
+            t.set(userRef, {
+                proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
+                attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
+                points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
+                }, { merge: true });
+            });
+        } 
+    } catch (error) {
+        console.error('Error writing to Firestore:', error);
+    }
     return tx.tx.hash;
 }
