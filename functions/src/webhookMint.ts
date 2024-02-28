@@ -65,7 +65,7 @@ export async function webhook_mint(attest_wallet: string, company: string, quest
                 });
                 t.set(newUserRef, {
                     proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
-                    attestWallet: attest_wallet,
+                    userWallet: attest_wallet,
                     attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                     points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });

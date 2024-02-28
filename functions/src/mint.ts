@@ -73,7 +73,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
                 });
                 t.set(newUserRef, {
                     proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
-                    attestWallet: attest_wallet,
+                    userWallet: attest_wallet,
                     attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                     points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });
