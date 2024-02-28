@@ -89,27 +89,24 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
                 Here is the original user DESCRIPTION: "${data.message}" 
                 
                 For this image, think through what is the full list of every piece of clothing, apparel, visible signage, and items in the image. 
-                Special brands to note: the SheFi brand has a logo that says SheFi and has products such as tie-dye bucket hats, beanies, and shirts, the Metamask brand logo has a cartoon image of a fox, the Infura brand logo has an black/orange japanese symbol, the Consensys brand logo has a small square outside of a circle, and the Mesh brand logo has 3 connected ovals.
+                Special brands to note: the SheFi brand has a logo that says SheFi and has products such as blue bucket hats, beanies, and shirts. The Linea brand does bracelets, and Paypal has beanies, Capsule has pens, Phaver has a black sweatshirt, WalletConnect has a water bottle and tote bags.
                 
-                The CATEGORY of the image is either "merch" if it is a closeup of clothes, or "conference" if it is of a group of people or people listening to a speaker. If it is neither, it is "general".
-
-                After thinking of the CATEGORY, can you answer TRUE or FALSE to each of the two following questions: 
-                1) Is the user's DESCRIPTION of the IMAGE generally correct, and without any false statements? For example, if they describe a swimsuit but the image contains a jacket, this would be FALSE. 
+                You need to think whether you would answer TRUE or FALSE to each of the two following questions: 
+                1) Is the user's DESCRIPTION of the IMAGE generally correct, and without any false statements? For example, if they describe a swimsuit but the image contains a man in a business suit, this would be FALSE. 
                 2) Is the BRAND "${brandName}" name or logo visible and present in the image? 
                 Note: If the brand name or logo is not directly visible or legible, but it could plausibly be correct based on the type of items/clothing, then trust the user and answer TRUE.
                 
                 Think step by step. If the answer to one or both questions is FALSE, then the claim is NOT VALID. If the answer to both questions is TRUE than the claim is VALID.
                 Then, your response is one of the two options: Either say:
                 1. "NOT VALID - [reason]"
-                2. "VALID - brand:[BRAND name] and category:[CATEGORY]"
-                Substitute the appropriate responses into the brackets.
+                2. "VALID - [BRAND name]"
+                Substitute the appropriate responses into the brackets. 
                 Respond with NOT VALID if the brand listed is definitely not in the image, because of [reason].
                 
                 EXAMPLES:
                 If the image has DESCRIPTION of the brand Ray-Ban, and there are no sunglasses visible in the image, then respond "NOT VALID - no Ray-Ban sunglasses visible".
                 If the image has the claim of the brand Ray-Ban, and there are sunglasses visible in the image but hard to tell what brand they are, which could be because there is no brand label visible or the item is small, then respond with "VALID - Ray-Ban, sunglasses".
                 If the DESCRIPTION says a swimsuit but the image contains a jacket, this would be "NOT VALID - image does not match description".`},
-                { type: 'image_url', image_url: { url: data.embedUrl! } }
             ],
         }]
     });
@@ -121,12 +118,22 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
         res.send({ success: false});
         return
     }
-    const categoryMatch = brandValidation?.match(/category:\[(.*?)\]/i);
-    const category = categoryMatch ? categoryMatch[1] : 'general';
+    const questBrands = ["SheFi", "Linea", "Capsule", "Phaver", "WalletConnect", "Harpie", "Paypal", "PYUSD", "Enso", "Hyperlane", "Base"];
+    let questId;
+    const brandNameLower = brandName.toLowerCase();
 
-    const questID = "general";
+    if (questBrands.map(brand => brand.toLowerCase()).includes(brandNameLower)) {
+        if (brandNameLower === "paypal") {
+            questId = "pyusd";
+        } else {
+            questId = brandNameLower;
+        }
+    } else {
+        questId = "general";
+    }
+
     const castURL = `https://warpcast.com/${data.username}/0x${data.hash.substring(2, 10)}`;
-    const hash = await eas_mint(data.username, data.wallet, castURL, data.embedUrl, data.message, questID, category);
+    const hash = await eas_mint(data.username, data.wallet, castURL, data.embedUrl, data.message, questId);
 
     await farcasterPost(`@${data.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}])
     res.send({ success: true });
