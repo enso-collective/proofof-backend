@@ -56,9 +56,8 @@ export const attest_poap = functions.https.onRequest(async (req, res) => {
             after: null // Cursor for the next page
         };
     let result = await fetchQueryWithPagination(query, variables);
-    console.log(result.data); // Process the data
-            for (const edge of result.data.Poaps.edges) {
-                const userWallet = edge.node.address;
+            for (const poap of result.data.Poaps.Poap) {
+                const userWallet = poap.owner.addresses[0];
                 console.log(userWallet);
                 //check if wallet already has EAS for the poapID
                 const db = admin.firestore();
@@ -90,8 +89,8 @@ export const attest_poap = functions.https.onRequest(async (req, res) => {
             if (nextPage !== null) {
                 result = nextPage;
                 console.log(result.data); // Process the data
-            for (const edge of result.data.Poaps.edges) {
-                const userWallet = edge.node.address;
+            for (const poap of result.data.Poaps.Poap) {
+                const userWallet = poap.owner.addresses[0];
                 console.log(userWallet);
                 //check if wallet already has EAS for the poapID
                 const db = admin.firestore();
