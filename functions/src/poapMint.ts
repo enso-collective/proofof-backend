@@ -44,7 +44,7 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
     const db = admin.firestore();
     try {
         const proofRef = db.collection('Proof').doc(); 
-        const userSnapshot = await db.collection('User').where('userWallet', '==', attest_wallet).get();
+        const userSnapshot = await db.collection('User').where('userWalletLower', '==', attest_wallet.toLowerCase()).get();
 
         if (userSnapshot.empty) {
             const newUserRef = db.collection('User').doc(); // Create a new document reference for the new user
@@ -52,6 +52,7 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
             await db.runTransaction(async (t: admin.firestore.Transaction) => {
                 t.set(proofRef, {
                     userWallet: attest_wallet,
+                    userWalletLower: attest_wallet.toLowerCase(),
                     pointValue: points,
                     timestamp: Date.now(),
                     attestationUID: newAttestationUID,
@@ -63,6 +64,7 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
                 t.set(newUserRef, {
                     proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                     userWallet: attest_wallet,
+                    userWalletLower: attest_wallet.toLowerCase(),
                     attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                     points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });
@@ -74,6 +76,7 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
         await db.runTransaction(async (t: admin.firestore.Transaction) => {
             t.set(proofRef, {
                 userWallet: attest_wallet,
+                userWalletLower: attest_wallet.toLowerCase(),
                 pointValue: points,
                 timestamp: Date.now(),
                 attestationUID: newAttestationUID,
