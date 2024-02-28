@@ -60,7 +60,7 @@ export async function webhook_mint(attest_wallet: string, company: string, quest
                     pointValue: points,
                     timestamp: Date.now(),
                     attestationUID: newAttestationUID,
-                    transaction: tx.tx.hash,
+                    transactionHash: tx.tx.hash,
                     image: false
                 });
                 t.set(newUserRef, {

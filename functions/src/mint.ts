@@ -43,26 +43,12 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
         },
     });
 
-    let points = 0; // default value
-    switch (category) {
-        case 'general':
-            points = 10;
-            break;
-        case 'merch':
-            points = 5;
-            break;
-        case 'conference':
-            points = 15;
-            break;
-        default:
-            points = 5; // default value if none of the cases match
-    }
-
     console.log(tx);
     const newAttestationUID = await tx.wait();
     console.log("New attestation UID:", newAttestationUID);
     console.log(tx.tx.hash)
 
+    let points = 5;
     const db = admin.firestore();
     try {
         const proofRef = db.collection('Proof').doc(); 

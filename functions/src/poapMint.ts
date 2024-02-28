@@ -56,12 +56,13 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
                     timestamp: Date.now(),
                     attestationUID: newAttestationUID,
                     transaction: tx.tx.hash,
+                    poapId: poap_id,
+                    poapName: poap_name,
                     image: false
                 });
                 t.set(newUserRef, {
                     proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                     attestWallet: attest_wallet,
-                    poapId: admin.firestore.FieldValue.arrayUnion(poap_id),
                     attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                     points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });
@@ -77,12 +78,13 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
                 timestamp: Date.now(),
                 attestationUID: newAttestationUID,
                 transaction: tx.tx.hash,
+                poapId: poap_id,
+                poapName: poap_name,
                 image: false
             });
             t.set(userRef, {
                 proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                 attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
-                poapId: admin.firestore.FieldValue.arrayUnion(poap_id),
                 points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });
             });
