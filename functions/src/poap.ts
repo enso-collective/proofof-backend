@@ -11,8 +11,8 @@ export const attest_poap = functions.https.onRequest(async (req, res) => {
     try {
         const poapData = poapInput.parse({
             key: req.body.key,
-            poap_id: req.body.id,
-            poap_name: req.body.name
+            poap_id: req.body.poap_id,
+            poap_name: req.body.poap_name
         });
         console.log(poapData);
 
