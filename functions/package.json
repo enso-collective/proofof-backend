@@ -17,6 +17,7 @@
   "dependencies": {
     "@airstack/node": "^0.0.5",
     "@ethereum-attestation-service/eas-sdk": "^1.4.2",
+    "@lens-protocol/client": "^2.0.0-alpha.34",
     "@neynar/nodejs-sdk": "^1.10.0",
     "auth0": "^3.6.0",
     "axios": "^1.6.1",
