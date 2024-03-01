@@ -53,16 +53,15 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
     const extractBrandQuery = await openai.chat.completions.create({
         messages: [{ 
             role: 'assistant', 
-            content: `A user supplied the description which could either contain a primary brand name about an image attached to the description, or describe a moment in their life they are taking a picture of. Without seeing the image, your job is to choose the primary brand they are describing. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi` 
+            content: `A user supplied an image plus text content, which may contain a primary brand name about the image , or describe a moment in their life they are taking a picture of. Without seeing the image, your job is to choose the primary brand they are describing. It may be a short word, such as "SheFi" or "Intuition", which is ok. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. It is likely that if a word is capitalized it is the Brand name. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike (describing the shefi brand or nike brand). It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi` 
         }, 
         { 
             role: 'system', 
-            content: `A user supplied the a description which contains a primary brand name about an image attached to the description. Without seeing the image, your job is to choose the primary brand they are describing. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. Return ONLY the brand name in plain text, or an empty response if no brands are mentioned. The quests are either #photobooth, #newfriend, or #shefipanel. If they mention any of those, return the same response without the # tag, such as "photobooth." ` 
+            content: `A user supplied an image plus text content, which may contain a primary brand name about the image. Without seeing the image, your job is to choose the primary brand they are describing. It may be a short word, such as "SheFi" or "Intuition", which is ok. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask.  It is likely that if a word is capitalized it is a brand name. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike (describing the shefi brand or nike brand). It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. Return ONLY the brand name in plain text, or an empty response if no brands are mentioned.` 
         }, 
         {
             role: 'user',
-            content: `A user supplied the following description which is meant to contain a brand name. Your job is to choose the primary brand they are describing. If no brands are mentioned, then return an empty response. If they say "[Brand] at the SheFi Summit" then choose the [Brand]. The quests are either #photobooth, #newfriend, or #shefipanel. If they mention any of those, return the same response without the # tag, such as "photobooth".
-
+            content: `A user supplied the following description which is meant to contain a brand name. Your job is to choose the primary brand they are describing. If no brands are mentioned, then return an empty response. If they say "[Brand] at the SheFi Summit" then choose the [Brand].
             User description: ${data.message}`
         }],
         model: 'gpt-4-0125-preview',

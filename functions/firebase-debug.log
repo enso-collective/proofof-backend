@@ -1,0 +1,115 @@
+[debug] [2024-03-01T00:44:45.343Z] ----------------------------------------------------------------------
+[debug] [2024-03-01T00:44:45.348Z] Command:       /opt/homebrew/Cellar/node/21.5.0/bin/node /opt/homebrew/bin/firebase deploy --only functions
+[debug] [2024-03-01T00:44:45.348Z] CLI Version:   13.3.1
+[debug] [2024-03-01T00:44:45.348Z] Platform:      darwin
+[debug] [2024-03-01T00:44:45.348Z] Node Version:  v21.5.0
+[debug] [2024-03-01T00:44:45.348Z] Time:          Thu Feb 29 2024 17:44:45 GMT-0700 (Mountain Standard Time)
+[debug] [2024-03-01T00:44:45.349Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2024-03-01T00:44:45.392Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2024-03-01T00:44:45.392Z] > authorizing via signed-in user (sean@ensocollective.xyz)
+[debug] [2024-03-01T00:44:45.392Z] [iam] checking project enso-collective for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2024-03-01T00:44:45.393Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/enso-collective:testIamPermissions [none]
+[debug] [2024-03-01T00:44:45.393Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/enso-collective:testIamPermissions x-goog-quota-user=projects/enso-collective
+[debug] [2024-03-01T00:44:45.393Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/enso-collective:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2024-03-01T00:44:45.587Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/enso-collective:testIamPermissions 200
+[debug] [2024-03-01T00:44:45.588Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/enso-collective:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2024-03-01T00:44:45.588Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/enso-collective/serviceAccounts/enso-collective@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2024-03-01T00:44:45.588Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/enso-collective/serviceAccounts/enso-collective@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2024-03-01T00:44:45.867Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/enso-collective/serviceAccounts/enso-collective@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2024-03-01T00:44:45.867Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/enso-collective/serviceAccounts/enso-collective@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'enso-collective'...
+[info] 
+[info] i  deploying functions 
+[info] Running command: npm --prefix "$RESOURCE_DIR" run lint
+[info] Running command: npm --prefix "$RESOURCE_DIR" run build
+[info] ✔  functions: Finished running predeploy script. 
+[debug] [2024-03-01T00:44:48.570Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/enso-collective [none]
+[debug] [2024-03-01T00:44:48.715Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/enso-collective 200
+[debug] [2024-03-01T00:44:48.716Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/enso-collective {"projectId":"enso-collective","projectNumber":"166452691391","displayName":"enso collective","name":"projects/enso-collective","resources":{"hostingSite":"enso-collective","realtimeDatabaseInstance":"enso-collective-default-rtdb","storageBucket":"enso-collective.appspot.com","locationId":"us-central"},"state":"ACTIVE","etag":"1_ec2c8b25-b6a7-48db-9469-060d027af75b"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2024-03-01T00:44:48.717Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/cloudfunctions.googleapis.com [none]
+[debug] [2024-03-01T00:44:48.717Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/enso-collective
+[debug] [2024-03-01T00:44:48.718Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/runtimeconfig.googleapis.com [none]
+[debug] [2024-03-01T00:44:48.718Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/runtimeconfig.googleapis.com x-goog-quota-user=projects/enso-collective
+[debug] [2024-03-01T00:44:48.719Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/cloudbuild.googleapis.com [none]
+[debug] [2024-03-01T00:44:48.719Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/cloudbuild.googleapis.com x-goog-quota-user=projects/enso-collective
+[debug] [2024-03-01T00:44:48.720Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/artifactregistry.googleapis.com [none]
+[debug] [2024-03-01T00:44:48.720Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/artifactregistry.googleapis.com x-goog-quota-user=projects/enso-collective
+[debug] [2024-03-01T00:44:49.001Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/runtimeconfig.googleapis.com 200
+[debug] [2024-03-01T00:44:49.001Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/runtimeconfig.googleapis.com [omitted]
+[debug] [2024-03-01T00:44:49.031Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/cloudbuild.googleapis.com 200
+[debug] [2024-03-01T00:44:49.032Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/cloudbuild.googleapis.com [omitted]
+[info] ✔  functions: required API cloudbuild.googleapis.com is enabled 
+[debug] [2024-03-01T00:44:49.034Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/artifactregistry.googleapis.com 200
+[debug] [2024-03-01T00:44:49.034Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/artifactregistry.googleapis.com [omitted]
+[info] ✔  artifactregistry: required API artifactregistry.googleapis.com is enabled 
+[debug] [2024-03-01T00:44:49.045Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/cloudfunctions.googleapis.com 200
+[debug] [2024-03-01T00:44:49.045Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/enso-collective/services/cloudfunctions.googleapis.com [omitted]
+[info] ✔  functions: required API cloudfunctions.googleapis.com is enabled 
+[debug] [2024-03-01T00:44:49.046Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/enso-collective/adminSdkConfig [none]
+[debug] [2024-03-01T00:44:49.249Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/enso-collective/adminSdkConfig 200
+[debug] [2024-03-01T00:44:49.249Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/enso-collective/adminSdkConfig {"projectId":"enso-collective","databaseURL":"https://enso-collective-default-rtdb.firebaseio.com","storageBucket":"enso-collective.appspot.com","locationId":"us-central"}
+[debug] [2024-03-01T00:44:49.249Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/enso-collective/configs [none]
+[debug] [2024-03-01T00:44:49.401Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/enso-collective/configs 200
+[debug] [2024-03-01T00:44:49.401Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/enso-collective/configs {}
+[debug] [2024-03-01T00:44:49.407Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] ⚠  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2024-03-01T00:44:49.847Z] > [functions] package.json contents: {
+  "name": "functions",
+  "scripts": {
+    "lint": "",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell  --debug",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "@airstack/node": "^0.0.5",
+    "@ethereum-attestation-service/eas-sdk": "^1.4.2",
+    "@lens-protocol/client": "^2.0.0-alpha.34",
+    "@neynar/nodejs-sdk": "^1.10.0",
+    "auth0": "^3.6.0",
+    "axios": "^1.6.1",
+    "ethers": "^6.11.0",
+    "firebase-admin": "^10.0.2",
+    "firebase-functions": "^3.18.0",
+    "openai": "^4.28.0",
+    "twitter-api-sdk": "^1.2.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/auth0": "^3.3.3",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^0.2.0",
+    "type-fest": "^4.10.2",
+    "typescript": "^4.5.4"
+  },
+  "private": true
+}
+[debug] [2024-03-01T00:44:49.847Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2024-03-01T00:44:49.848Z] Could not find functions.yaml. Must use http discovery
+[debug] [2024-03-01T00:44:49.852Z] Found firebase-functions binary at '/Users/seanbrennan/Documents/projects/enso/ios-backend/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8410
+
+[error] (node:12237) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[debug] [2024-03-01T00:44:50.549Z] Got response from /__/functions.yaml {"endpoints":{"farcasterWebhook":{"platform":"gcfv1","httpsTrigger":{},"entryPoint":"farcasterWebhook"},"attestation":{"platform":"gcfv2","labels":{},"httpsTrigger":{},"entryPoint":"attestation"},"attest_poap":{"platform":"gcfv2","labels":{},"httpsTrigger":{},"entryPoint":"attest_poap"},"twitterScheduler":{"platform":"gcfv2","labels":{},"scheduleTrigger":{"schedule":"* * * * *","retryConfig":{}},"entryPoint":"twitterScheduler"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}]}
