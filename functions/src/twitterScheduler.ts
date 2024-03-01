@@ -75,7 +75,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             console.log(element);
 
             const user = users.find(x => x.id === element.author_id);
-            const usersSnapshot = await userCollection.where('ftwitterUsernameid', '==', user?.username).get()
+            const usersSnapshot = await userCollection.where('twitterUsername', '==', user?.username).get()
             if (usersSnapshot.empty) {
                 userClient.tweets.createTweet({ text: `A connected wallet is required for your onchain Proof, please sign up on https://shefi.ensocollective.xyz and connect your Twitter`, reply: { in_reply_to_tweet_id: element.id } });
                 return;
