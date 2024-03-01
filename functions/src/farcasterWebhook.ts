@@ -61,7 +61,7 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
         }, 
         {
             role: 'user',
-            content: `A user supplied the following description which is meant to contain a brand name. Your job is to choose the primary brand they are describing. If no brands are mentioned, then return an empty response. If they say "[Brand] at the SheFi Summit" then choose the [Brand].
+            content: `A user supplied the following description which is meant to contain a brand name. Your job is to choose the primary brand they are describing. If no brands are mentioned, then return an empty array []. If they say "[Brand] at a [Place]" then choose the [Brand].
             User description: ${data.message}`
         }],
         model: 'gpt-4-0125-preview',
