@@ -14,8 +14,8 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
     const twitterSettingsCollection = admin.firestore().collection('twitterSettings');
 
     await admin.firestore().runTransaction(async t => {
-        const twitterSetings = await t.get(twitterSettingsCollection.doc('settings'));
-        const token = twitterSetings.data()?.token;
+        const twitterSettings = await t.get(twitterSettingsCollection.doc('settings'));
+        const token = twitterSettings.data()?.token;
 
         try {
             const authClient = new auth.OAuth2User({
@@ -35,8 +35,8 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
         }
     });
 
-    const twitterSetings =  await twitterSettingsCollection.doc('settings').get();
-    const twitterSettingsData = twitterSetings.data();
+    const twitterSettings =  await twitterSettingsCollection.doc('settings').get();
+    const twitterSettingsData = twitterSettings.data();
     const lastMentionTweetId = twitterSettingsData?.lastMentionTweetid;
     const token = twitterSettingsData?.token;
 
@@ -61,7 +61,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             };
             await twitterSettingsCollection.doc('settings').set(newTwitterSettings);
         } else if (newestId !== undefined) {
-            await twitterSetings.ref.update({
+            await twitterSettings.ref.update({
                 lastMentionTweetid: newestId
             });
         }
@@ -81,7 +81,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
                 return;
             }
 
-            const wallet = usersSnapshot.docs![0].data().userWalletToLowerCase;
+            const wallet = usersSnapshot.docs![0].data().userWalletLower;
 
             const mediaKeys = element.attachments?.media_keys ?? [];
             const photo = media.find(x => mediaKeys.includes(x.media_key ?? '') && x.type === 'photo') as components['schemas']['Photo'];
@@ -97,15 +97,14 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             const extractBrandQuery = await openai.chat.completions.create({
                 messages: [{ 
                     role: 'assistant', 
-                    content: `A user supplied the a description which contains either a primary brand name about an image attached to the description, or describes a moment in their life they are taking a picture of for a "quest". Without seeing the image, your job is to choose the primary brand they are describing, or the quest they are completing. Note: there are some new brand names to learn: SheFi, Harpie, WalletConnect, Phaver, Linea, Capsule. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. The quests are either #photobooth, #newfriend, or #shefipanel`
+                    content: `A user supplied a text description of their image, which may contain either a brand name (usually a capitalized word) about an image attached, or describes a moment in their life they are taking a picture of for a "quest". Without seeing the image, your job is to choose the primary brand they are describing, or the quest they are completing. Note: there are some new brand names to learn: SheFi, Harpie, WalletConnect, Phaver, Linea, Capsule. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It can never be @proofof. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi`
                 }, 
                 { 
                     role: 'system', 
-                    content: `A user supplied the a description which contains either a primary brand name about an image attached to the description, or describes a moment in their life they are taking a picture of for a "quest". Without seeing the image, your job is to choose the primary brand they are describing. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. Return ONLY the brand name in plain text, or an empty response if no brands are mentioned.  The quests are either #photobooth, #newfriend, or #shefipanel.  If they mention any of those, return the same response without the # tag. ` 
-                }, 
+                    content: `A user supplied the a description which contains either a primary brand name about an image attached to the description, or describes a moment in their life they are taking a picture of for a "quest". Without seeing the image, your job is to choose the primary brand they are describing. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. Return ONLY the brand name in plain text, or an empty response if no brands are mentioned.`
                 {
                     role: 'user',
-                    content: `A user supplied the following description which is meant to either contain a brand name, or describes a moment in their life they are taking a picture of for a "quest". Your job is to choose the primary brand they are describing or quest. If no brands or quests are mentioned, then return an empty response. If they say "[Brand] at the SheFi Summit" then choose the [Brand].  The quests are either #photobooth, #newfriend, or #shefipanel. If they mention any of those, return the same response without the # tag, such as "newfriend". 
+                    content: `A user supplied the following description which is meant to either contain a brand name, or describes a moment in their life they are taking a picture of for a "quest". Your job is to choose the primary brand they are describing or quest. If no brands or quests are mentioned, then return an empty response. If they say "[Brand] at the SheFi Summit" then choose the [Brand]
 
                     User description: ${element.text}`
                 }],
