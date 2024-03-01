@@ -102,6 +102,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
                 { 
                     role: 'system', 
                     content: `A user supplied the a description which contains either a primary brand name about an image attached to the description, or describes a moment in their life they are taking a picture of for a "quest". Without seeing the image, your job is to choose the primary brand they are describing. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike. It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. Return ONLY the brand name in plain text, or an empty response if no brands are mentioned.`
+                },
                 {
                     role: 'user',
                     content: `A user supplied the following description which is meant to either contain a brand name, or describes a moment in their life they are taking a picture of for a "quest". Your job is to choose the primary brand they are describing or quest. If no brands or quests are mentioned, then return an empty response. If they say "[Brand] at the SheFi Summit" then choose the [Brand]
