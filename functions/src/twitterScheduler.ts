@@ -107,7 +107,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
                 },
                 {
                     role: 'user',
-                    content: `A user supplied the following description which is meant to either contain a brand name, or describes a moment in their life they are taking a picture of for a "quest". Your job is to choose the primary brand they are describing or quest. If they say "[Brand] at the a [Place]" then choose the [Brand].
+                    content: `A user supplied the following description which is meant to contain a brand name. Your job is to choose the primary brand they are describing and return the name of it as BRAND. If the choice of brand is unsure then return an an empty response. If they say "[BRAND] at a [PLACE]" then choose the [BRAND]
 
                     User description: ${element.text}`
                 }],
