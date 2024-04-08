@@ -53,11 +53,11 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
     const extractBrandQuery = await openai.chat.completions.create({
         messages: [{ 
             role: 'assistant', 
-            content: `A user supplied an image plus text content, which may contain a primary brand name about the image , or describe a moment in their life they are taking a picture of. Without seeing the image, your job is to choose the primary brand they are describing. It may be a short word, such as "SheFi" or "Intuition", which is ok. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. It is likely that if a word is capitalized it is the Brand name. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike (describing the shefi brand or nike brand). It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. The brand is never described by @proofof` 
+            content: `A user supplied an image plus text content, which may contain a primary brand name about the image , or describe a moment in their life they are taking a picture of. Without seeing the image, your job is to choose the primary brand they are describing. It may be a short word, such as "SheFi" or "Unlonely", which is ok. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask. It is likely that if a word is capitalized it is the Brand name. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike (describing the shefi brand or nike brand). It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. The brand is never described by @proofof` 
         }, 
         { 
             role: 'system', 
-            content: `A user supplied an image plus text content, which may contain a primary brand name about the image. Without seeing the image, your job is to choose the primary brand they are describing. It may be a short word, such as "SheFi" or "Intuition", which is ok. Note: there are some new brand names to learn: SheFi, Consensys, Mesh, Infura, Metamask.  It is likely that if a word is capitalized it is a brand name. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike (describing the shefi brand or nike brand). It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. Return ONLY the brand name in plain text, or an empty response if no brands are mentioned. The brand is never described by @proofof` 
+            content: `A user supplied an image plus text content, which may contain a primary brand name about the image. Without seeing the image, your job is to choose the primary brand they are describing. It may be a short word, such as "SheFi" or "Intuition", which is ok. Note: there are some new brand names to learn: SheFi, Unlonely, Consensys, Mesh, Infura, Metamask.  It is likely that if a word is capitalized it is a brand name. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike (describing the shefi brand or nike brand). It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. Return ONLY the brand name in plain text, or an empty response if no brands are mentioned. The brand is never described by @proofof` 
         }, 
         {
             role: 'user',
@@ -89,7 +89,7 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
                 Here is the original user DESCRIPTION: "${data.message}" 
                 
                 For this image, think through what is the full list of every piece of clothing, apparel, visible signage, logos, and items in the image. 
-                Special brands to note: the SheFi brand has a logo that says SheFi and has products such as blue bucket hats, beanies, and shirts. The Linea brand does bracelets, and Paypal has beanies, Capsule has pens, Phaver has a black sweatshirt, WalletConnect has a water bottle and tote bags.
+                Special brands to note: the Unlonely brand has a wordmark/logo with the "u and the n" combined in the word unlonely, the SheFi brand has a logo that says SheFi and has products such as blue bucket hats, beanies, and shirts. The Linea brand does bracelets, and Paypal has beanies, Capsule has pens, Phaver has a black sweatshirt, WalletConnect has a water bottle and tote bags.
                 
                 You need to think whether you would answer TRUE or FALSE to each of the two following questions: 
                 1) Is the user's DESCRIPTION of the IMAGE generally correct, and without any false statements? For example, if they describe a swimsuit but the image contains a man in a business suit, this would be FALSE. 
@@ -119,7 +119,7 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
         res.send({ success: false});
         return
     }
-    const questBrands = ["SheFi", "Linea", "Capsule", "Phaver", "WalletConnect", "Harpie", "Paypal", "PYUSD", "Enso", "Hyperlane", "Base", "photobooth", "newfriend", "shefipanel"];
+    const questBrands = ["SheFi", "Linea", "Unlonely", "Capsule", "Phaver", "WalletConnect", "Harpie", "Paypal", "PYUSD", "Enso", "Hyperlane", "Base", "photobooth", "newfriend", "shefipanel"];
     let questId;
     const brandNameLower = brandName.toLowerCase();
 
