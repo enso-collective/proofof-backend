@@ -52,7 +52,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
         const appClient = new Client(TWITTER_API_BEARER_KEY!);
         const userClient = new Client(authClient);
 
-        const mentions = await appClient.tweets.usersIdMentions('1758104296208396288', { start_time: '2024-01-27T07:05:14.227Z', since_id: lastMentionTweetId, expansions: ['author_id', 'entities.mentions.username', 'attachments.media_keys'], 'media.fields': ['url', 'type', 'variants', 'preview_image_url'], 'user.fields': ['username', 'id', 'name'], 'tweet.fields': ['attachments', 'author_id', 'text', 'id'] });
+        const mentions = await appClient.tweets.usersIdMentions('1758104296208396288', { start_time: '2024-01-27T07:05:14.227Z', since_id: lastMentionTweetId, expansions: ['author_id', 'entities.mentions.username', 'attachments.media_keys', 'in_reply_to_user_id', 'referenced_tweets.id'], 'media.fields': ['url', 'type', 'variants', 'preview_image_url'], 'user.fields': ['username', 'id', 'name'], 'tweet.fields': ['attachments', 'author_id', 'text', 'id', 'in_reply_to_user_id'] });
         let newestId = mentions.meta?.newest_id;
 
         if (newestId !== undefined && twitterSettingsData === undefined) {
@@ -74,10 +74,13 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
         mentions.data?.forEach(async element => {
             console.log(element);
 
+            if (element.referenced_tweets != null) { return; }
+            
             const user = users.find(x => x.id === element.author_id);
             const usersSnapshot = await userCollection.where('twitterUsername', '==', user?.username).get()
             console.log("username from twitter: ", user?.username)
             console.log("userSnapshot: ", usersSnapshot);
+
             if (usersSnapshot.empty) {
                 userClient.tweets.createTweet({ text: `A connected wallet is required for your onchain Proof, please sign up on https://shefi.ensocollective.xyz and connect your Twitter`, reply: { in_reply_to_tweet_id: element.id } });
                 return;
