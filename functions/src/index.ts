@@ -9,3 +9,4 @@ export { farcasterWebhook } from './farcasterWebhook'
 export { attestation } from './attestation'
 export { attest_poap } from "./poap"
 export { twitterScheduler } from './twitterScheduler'
+export { farcasterFrame } from './farcasterFrame'

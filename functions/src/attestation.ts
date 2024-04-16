@@ -16,6 +16,7 @@ export const attestation = functions.https.onRequest(async (req, res) => {
         const apiUsersSnapshot = await apiUsersCollection.where('key', '==', data.key).get();
         if (apiUsersSnapshot.docs.length == 0) {
             res.status(401).send("Unauthorized");
+            return;
         }
 
         const apiUser = apiUsersSnapshot.docs[0].data();
