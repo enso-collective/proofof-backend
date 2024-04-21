@@ -26,6 +26,23 @@ const farcasterFrameInput = z.object({
   wallet: z.string().optional()
 });
 
+const validationInput = z.object({
+  key: z.string(),
+  username: z.string(),
+  imageUrl: z.string(),
+  message: z.string(),
+});
+
+const internalMintInput = z.object({
+  key: z.string(),
+  username: z.string(), 
+  attestWallet: z.string(), 
+  postUrl: z.string(), 
+  postImageLink: z.string(), 
+  postContent: z.string(), 
+  questId: z.string()
+});
+
 const poapInput = z.object({
   key: z.string(),
   poap_id: z.string(),
@@ -36,5 +53,7 @@ export {
   farcasterWebhookInput,
   farcasterFrameInput,
   attestationInput,
-  poapInput
+  poapInput,
+  validationInput,
+  internalMintInput
 };

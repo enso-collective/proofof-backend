@@ -15,64 +15,82 @@ const NEYNAR_SIGNER_UUID = process.env.NEYNAR_SIGNER_UUID;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
-    const data = farcasterWebhookInput.parse({
-        fid: req.body.data.author.fid,
-        username: req.body.data.author.username,
-        displayName: req.body.data.author.display_name,
-        message: req.body.data.text,
-        embedUrl: req.body.data.embeds?.at(0)?.url,
-        hash: req.body.data.hash,
-        wallet: req.body.data.author.verifications?.at(0), //TODO add check for Solana wallet
-    });
+    try {
+        const data = farcasterWebhookInput.parse({
+            fid: req.body.data.author.fid,
+            username: req.body.data.author.username,
+            displayName: req.body.data.author.display_name,
+            message: req.body.data.text,
+            embedUrl: req.body.data.embeds?.at(0)?.url,
+            hash: req.body.data.hash,
+            wallet: req.body.data.author.verifications?.at(0), //TODO add check for Solana wallet
+        });
 
-    console.log(data);
+        console.log(data);
 
-    if (data.wallet === undefined) {
-        // reply in farcaster
-        await farcasterPost(`Please add a verified wallet in your profile settings and retry this cast to mint a Proof`, data.hash)
-        res.send({ success: false });
-        return
+        if (data.wallet === undefined) {
+            // reply in farcaster
+            await farcasterPost(`Please add a verified wallet in your profile settings and retry this cast to mint a Proof`, data.hash)
+            res.send({ success: false });
+            return
+        }
+
+        if (data.embedUrl === undefined) {
+            // reply in farcaster
+            await farcasterPost(`I didn't see an image attached to your cast @${data.username}, please retry a new cast with an image.`, data.hash)
+            res.send({ success: false });
+            return
+        }
+
+        console.log("p - 1");
+
+        // if (false == await checkFarcasterUserState(data.fid)) {
+        //     await farcasterPost(`@${data.username} you're out of validations for today. Please try again later.`, data.hash)
+        //     res.send({ success: false });
+        //     return;
+        // }
+
+        const brandName = await extractBrand(data.message);
+
+        console.log("p - 2");
+        if (brandName === null) {
+            // reply in farcaster
+            await farcasterPost(`We didn't find a clear brand or quest described in your cast @${data.username}. Please retry your cast with more specific description of the brand or quest hashtag.`, data.hash)
+            console.log('cannot extract brand name')
+
+            res.send({ success: false });
+            return
+        }
+
+        console.log("p - 3");
+
+        const brandValidation = await validateBrand(brandName, data.message, data.embedUrl!);
+        if (brandValidation === null) {
+            // reply in farcaster
+            await farcasterPost(`@${data.username} the AI analysis of your description & image determined it to be "${brandValidation}" for a Proof. Please try again with a different image or description.`, data.hash)
+            res.send({ success: false});
+            return
+        }
+
+        console.log("p - 4");
+        
+        let questId = determineQuestId(brandName);
+
+        console.log("p - 5");
+
+        const castURL = `https://warpcast.com/${data.username}/0x${data.hash.substring(2, 10)}`;
+
+        console.log("p - 6");
+
+        const hash = await eas_mint(data.username, data.wallet, castURL, data.embedUrl, data.message, questId);
+
+        console.log("p - 7");
+
+        await farcasterPost(`@${data.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}])
+        res.send({ success: true });
+    }  catch(error) {
+        res.status(200).send({ success: false, error: error });
     }
-
-    if (data.embedUrl === undefined) {
-        // reply in farcaster
-        await farcasterPost(`I didn't see an image attached to your cast @${data.username}, please retry a new cast with an image.`, data.hash)
-        res.send({ success: false });
-        return
-    }
-
-    // if (false == await checkFarcasterUserState(data.fid)) {
-    //     await farcasterPost(`@${data.username} you're out of validations for today. Please try again later.`, data.hash)
-    //     res.send({ success: false });
-    //     return;
-    // }
-
-    const brandName = await extractBrand(data.message);
-
-    if (brandName === null) {
-        // reply in farcaster
-        await farcasterPost(`We didn't find a clear brand or quest described in your cast @${data.username}. Please retry your cast with more specific description of the brand or quest hashtag.`, data.hash)
-        console.log('cannot extract brand name')
-
-        res.send({ success: false });
-        return
-    }
-
-    const brandValidation = await validateBrand(brandName, data.message, data.embedUrl!);
-    if (brandValidation === null) {
-        // reply in farcaster
-        await farcasterPost(`@${data.username} the AI analysis of your description & image determined it to be "${brandValidation}" for a Proof. Please try again with a different image or description.`, data.hash)
-        res.send({ success: false});
-        return
-    }
-    
-    let questId = determineQuestId(brandName);
-
-    const castURL = `https://warpcast.com/${data.username}/0x${data.hash.substring(2, 10)}`;
-    const hash = await eas_mint(data.username, data.wallet, castURL, data.embedUrl, data.message, questId);
-
-    await farcasterPost(`@${data.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}])
-    res.send({ success: true });
 });
 
 const farcasterPost = async (text: string, replyTo: string, embeds?: EmbeddedCast[]) => {
