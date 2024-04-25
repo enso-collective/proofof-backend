@@ -42,7 +42,7 @@ export const validationWebhook = functions.https.onRequest(async (req, res) => {
 
         let questId = determineQuestId(brandName);
 
-        res.status(200).send({ brand: brandName,  validationMessage: brandValidation, questId: questId });
+        res.status(200).send({ brand: brandName, validationMessage: brandValidation, questId: questId });
     } catch(error) {
         res.status(500).send(error);
     }
