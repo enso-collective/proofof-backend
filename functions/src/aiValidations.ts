@@ -19,7 +19,7 @@ export async function extractBrand(message: string) {
             content: `A user supplied the following description which is meant to contain a brand name. Your job is to choose the primary brand they are describing and return the name of it as BRAND. If the choice of brand is unsure then return an an empty response. If they say "[BRAND] at a [PLACE]" then choose the [BRAND].
             User description: ${message}`
         }],
-        model: 'gpt-4-turbo',
+        model: 'gpt-4o',
         max_tokens: 500
     });
 
@@ -36,7 +36,7 @@ export async function validateBrand(brandName: string, message: string, imageUrl
     const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
     const validateBrandQuery = await openai.chat.completions.create({
-        model: 'gpt-4-turbo',
+        model: 'gpt-4o',
         messages: [{ 
             role: 'user', 
             content: [ 
