@@ -56,6 +56,10 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
         const mentions = await appClient.tweets.usersIdMentions('1758104296208396288', { start_time: '2024-01-27T07:05:14.227Z', since_id: lastMentionTweetId, expansions: ['author_id', 'entities.mentions.username', 'attachments.media_keys', 'in_reply_to_user_id', 'referenced_tweets.id'], 'media.fields': ['url', 'type', 'variants', 'preview_image_url'], 'user.fields': ['username', 'id', 'name'], 'tweet.fields': ['attachments', 'author_id', 'text', 'id', 'in_reply_to_user_id'] });
         let newestId = mentions.meta?.newest_id;
 
+        if (newestId === lastMentionTweetId) {
+            return;
+        }
+
         if (newestId !== undefined && twitterSettingsData === undefined) {
             const newTwitterSettings = {
                 lastMentionTweetid: newestId
