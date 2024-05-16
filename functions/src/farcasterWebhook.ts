@@ -12,7 +12,6 @@ import { EmbeddedCast } from '@neynar/nodejs-sdk/build/neynar-api/v2';
 
 const NEYNAR_API_KEY =  process.env.NEYNAR_API_KEY;
 const NEYNAR_SIGNER_UUID = process.env.NEYNAR_SIGNER_UUID;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
     try {
