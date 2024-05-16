@@ -43,6 +43,15 @@ const internalMintInput = z.object({
   questId: z.string()
 });
 
+const internalMintNotesInput = z.object({
+  key: z.string(),
+  username: z.string(), 
+  attestWallet: z.string(), 
+  postUrl: z.string(), 
+  noteText: z.string(), 
+  sentiment: z.string(),
+});
+
 const poapInput = z.object({
   key: z.string(),
   poap_id: z.string(),
@@ -55,5 +64,6 @@ export {
   attestationInput,
   poapInput,
   validationInput,
-  internalMintInput
+  internalMintInput,
+  internalMintNotesInput
 };
