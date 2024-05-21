@@ -41,8 +41,6 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
             return
         }
 
-        console.log("p - 1");
-
         // if (false == await checkFarcasterUserState(data.fid)) {
         //     await farcasterPost(`@${data.username} you're out of validations for today. Please try again later.`, data.hash)
         //     res.send({ success: false });
@@ -51,7 +49,6 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
 
         const brandName = await extractBrand(data.message);
 
-        console.log("p - 2");
         if (brandName === null) {
             // reply in farcaster
             await farcasterPost(`We didn't find a clear brand or quest described in your cast @${data.username}. Please retry your cast with more specific description of the brand or quest hashtag.`, data.hash)
@@ -61,8 +58,6 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
             return
         }
 
-        console.log("p - 3");
-
         const brandValidation = await validateBrand(brandName, data.message, data.embedUrl!);
         if (brandValidation === null) {
             // reply in farcaster
@@ -70,20 +65,10 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
             res.send({ success: false});
             return
         }
-
-        console.log("p - 4");
         
         let questId = determineQuestId(brandName);
-
-        console.log("p - 5");
-
         const castURL = `https://warpcast.com/${data.username}/0x${data.hash.substring(2, 10)}`;
-
-        console.log("p - 6");
-
         const hash = await eas_mint(data.username, data.wallet, castURL, data.embedUrl, data.message, questId);
-
-        console.log("p - 7");
 
         await farcasterPost(`@${data.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}])
         res.send({ success: true });
