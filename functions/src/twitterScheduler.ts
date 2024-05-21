@@ -12,44 +12,43 @@ const TWITTER_API_BEARER_KEY = process.env.TWITTER_API_BEARER_KEY
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export const twitterScheduler = onSchedule('* * * * *', async (event) => {
-    const twitterSettingsCollection = admin.firestore().collection('twitterSettings');
-
-    await admin.firestore().runTransaction(async t => {
-        const twitterSettings = await t.get(twitterSettingsCollection.doc('settings'));
-        const token = twitterSettings.data()?.token;
-
-        try {
-            const authClient = new auth.OAuth2User({
-                client_id: TWITTER_API_KEY!,
-                client_secret: TWITTER_API_SECRET_KEY,
-                callback: "http://127.0.0.1:3000/callback",
-                scopes: ["tweet.read", "tweet.write", "users.read", "offline.access"],
-                token: token
-            });
-        
-            if (authClient.isAccessTokenExpired()) {
-                const newToken = await authClient.refreshAccessToken();
-                await twitterSettingsCollection.doc('settings').set({ token: newToken.token });
-            }
-        } catch(error) {
-            console.log(error);
-        }
-    });
-
-    const twitterSettings =  await twitterSettingsCollection.doc('settings').get();
-    const twitterSettingsData = twitterSettings.data();
-    const lastMentionTweetId = twitterSettingsData?.lastMentionTweetid;
-    const token = twitterSettingsData?.token;
-
-    const authClient = new auth.OAuth2User({
-        client_id: TWITTER_API_KEY!,
-        client_secret: TWITTER_API_SECRET_KEY,
-        callback: "http://127.0.0.1:3000/callback",
-        scopes: ["tweet.read", "tweet.write", "users.read", "offline.access"],
-        token: token
-    });
-
     try {
+        const twitterSettingsCollection = admin.firestore().collection('twitterSettings');
+
+        await admin.firestore().runTransaction(async t => {
+            const twitterSettings = await t.get(twitterSettingsCollection.doc('settings'));
+            const token = twitterSettings.data()?.token;
+                const authClient = new auth.OAuth2User({
+                    client_id: TWITTER_API_KEY!,
+                    client_secret: TWITTER_API_SECRET_KEY,
+                    callback: "http://127.0.0.1:3000/callback",
+                    scopes: ["tweet.read", "tweet.write", "users.read", "offline.access"],
+                    token: token
+                });
+            
+                if (authClient.isAccessTokenExpired()) {
+                    const newToken = await authClient.refreshAccessToken();
+                    await twitterSettingsCollection.doc('settings').set({ token: newToken.token });
+                }
+        });
+
+        const twitterSettings =  await twitterSettingsCollection.doc('settings').get();
+        const twitterSettingsData = twitterSettings.data();
+        const lastMentionTweetId = twitterSettingsData?.lastMentionTweetid;
+        const token = twitterSettingsData?.token;
+
+        if (lastMentionTweetId === undefined) {
+            return;
+        }
+
+        const authClient = new auth.OAuth2User({
+            client_id: TWITTER_API_KEY!,
+            client_secret: TWITTER_API_SECRET_KEY,
+            callback: "http://127.0.0.1:3000/callback",
+            scopes: ["tweet.read", "tweet.write", "users.read", "offline.access"],
+            token: token
+        });
+    
         const appClient = new Client(TWITTER_API_BEARER_KEY!);
         const userClient = new Client(authClient);
 
@@ -77,17 +76,13 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
         const users = mentions.includes?.users ?? []
 
         mentions.data?.forEach(async element => {
-            console.log(element);
-
             if (element.referenced_tweets != null) { return; }
             
             const user = users.find(x => x.id === element.author_id);
             const usersSnapshot = await userCollection.where('twitterUsername', '==', user?.username).get()
-            console.log("username from twitter: ", user?.username)
-            console.log("userSnapshot: ", usersSnapshot);
 
             if (usersSnapshot.empty) {
-                userClient.tweets.createTweet({ text: `A connected wallet is required for your onchain Proof, please sign up on https://shefi.ensocollective.xyz and connect your Twitter`, reply: { in_reply_to_tweet_id: element.id } });
+                await userClient.tweets.createTweet({ text: `A connected wallet is required for your onchain Proof, please sign up on https://shefi.ensocollective.xyz and connect your Twitter`, reply: { in_reply_to_tweet_id: element.id } });
                 return;
             }
 
@@ -97,25 +92,21 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             const photo = media.find(x => mediaKeys.includes(x.media_key ?? '') && x.type === 'photo') as components['schemas']['Photo'];
 
             if (photo === undefined) {
-                userClient.tweets.createTweet({ text: `I didn't see an image attached to your tweet @${user?.username}, please retry a new tweet with an image.`, reply: { in_reply_to_tweet_id: element.id } });
+                await userClient.tweets.createTweet({ text: `I didn't see an image attached to your tweet @${user?.username}, please retry a new tweet with an image.`, reply: { in_reply_to_tweet_id: element.id } });
                 return;
             }
-            console.log(photo.url);
 
             const brandName = await extractBrand(element.text);
 
             if (brandName === null) {
-                // reply in twitter
-                userClient.tweets.createTweet({ text: `We didn't find a clear brand or quest described in your tweet @${user?.username}. Please retry your tweet with more specific description of the brand or the quest hashtag.`, reply: { in_reply_to_tweet_id: element.id } });
-                console.log('cannot extract brand nam or quest')
+                await userClient.tweets.createTweet({ text: `We didn't find a clear brand or quest described in your tweet @${user?.username}. Please retry your tweet with more specific description of the brand or the quest hashtag.`, reply: { in_reply_to_tweet_id: element.id } });
 
                 return;
             }
             
             const brandValidation = await validateBrand(brandName, element.text, photo.url!);
             if (brandValidation === null) {
-                // reply in twitter
-                userClient.tweets.createTweet({ text: `@${user?.username} the AI analysis of your description & image determined it to be "${brandValidation}" for a Proof. Please try again with a different image or description.`, reply: { in_reply_to_tweet_id: element.id } });
+                await userClient.tweets.createTweet({ text: `@${user?.username} the AI analysis of your description & image determined it to be "${brandValidation}" for a Proof. Please try again with a different image or description.`, reply: { in_reply_to_tweet_id: element.id } });
                 return;
             }
 
@@ -123,7 +114,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
 
             const tweetUrl = `https://twitter.com/${user?.username}/status/${newestId}`;
             const hash = await eas_mint(user?.username!, wallet, tweetUrl, photo.url!, element.text, questId);
-            userClient.tweets.createTweet({ text: `@${user?.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, reply: { in_reply_to_tweet_id: element.id } });
+            await userClient.tweets.createTweet({ text: `@${user?.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, reply: { in_reply_to_tweet_id: element.id } });
         });
     } catch(error) {
         console.log(error);
