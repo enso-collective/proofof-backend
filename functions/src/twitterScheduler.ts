@@ -77,19 +77,20 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
 
             const wallet = usersSnapshot.docs![0].data().userWalletLower;
 
-            const mediaKeys = element.attachments?.media_keys ?? [];
-            const photo = media.find(x => mediaKeys.includes(x.media_key ?? '') && x.type === 'photo') as components['schemas']['Photo'];
-
-            if (photo === undefined) {
-                await userClient.tweets.createTweet({ text: `I didn't see an image attached to your tweet @${user?.username}, please retry a new tweet with an image.`, reply: { in_reply_to_tweet_id: element.id } });
-                return;
-            }
 
             const brandName = await extractBrand(element.text);
 
             if (brandName === null) {
                 await userClient.tweets.createTweet({ text: `We didn't find a clear brand or quest described in your tweet @${user?.username}. Please retry your tweet with more specific description of the brand or the quest hashtag.`, reply: { in_reply_to_tweet_id: element.id } });
 
+                return;
+            }
+
+            const mediaKeys = element.attachments?.media_keys ?? [];
+            const photo = media.find(x => mediaKeys.includes(x.media_key ?? '') && x.type === 'photo') as components['schemas']['Photo'];
+
+            if (photo === undefined && brandName !== 'LUKSO') {
+                await userClient.tweets.createTweet({ text: `I didn't see an image attached to your tweet @${user?.username}, please retry a new tweet with an image.`, reply: { in_reply_to_tweet_id: element.id } });
                 return;
             }
             
