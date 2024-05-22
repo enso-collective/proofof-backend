@@ -50,7 +50,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
     console.log("New attestation UID:", newAttestationUID);
     console.log(tx.tx.hash)
 
-    let points = 5;
+    let points = 100;
     const db = admin.firestore();
     try {
         const proofRef = db.collection('Proof').doc(); 

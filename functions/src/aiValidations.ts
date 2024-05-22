@@ -3,6 +3,9 @@ import OpenAI from 'openai';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export async function extractBrand(message: string) {
+    if (message.includes('#ProofofLUKSO')) {
+        return 'LUKSO';
+    }
     const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
     const extractBrandQuery = await openai.chat.completions.create({
@@ -33,6 +36,10 @@ export async function extractBrand(message: string) {
 }
 
 export async function validateBrand(brandName: string, message: string, imageUrl: string) {
+    if (message.includes('#ProofofLUKSO')) {
+        return 'LUKSO';
+    }
+    
     const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
     const validateBrandQuery = await openai.chat.completions.create({
