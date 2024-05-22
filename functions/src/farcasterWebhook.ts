@@ -14,6 +14,7 @@ const NEYNAR_API_KEY =  process.env.NEYNAR_API_KEY;
 const NEYNAR_SIGNER_UUID = process.env.NEYNAR_SIGNER_UUID;
 
 export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
+    res.send({ success: true });
     try {
         const data = farcasterWebhookInput.parse({
             fid: req.body.data.author.fid,
@@ -30,14 +31,12 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
         if (data.wallet === undefined) {
             // reply in farcaster
             await farcasterPost(`Please add a verified wallet in your profile settings and retry this cast to mint a Proof`, data.hash)
-            res.send({ success: false });
             return
         }
 
         if (data.embedUrl === undefined) {
             // reply in farcaster
             await farcasterPost(`I didn't see an image attached to your cast @${data.username}, please retry a new cast with an image.`, data.hash)
-            res.send({ success: false });
             return
         }
 
@@ -53,8 +52,6 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
             // reply in farcaster
             await farcasterPost(`We didn't find a clear brand or quest described in your cast @${data.username}. Please retry your cast with more specific description of the brand or quest hashtag.`, data.hash)
             console.log('cannot extract brand name')
-
-            res.send({ success: false });
             return
         }
 
@@ -71,9 +68,8 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
         const hash = await eas_mint(data.username, data.wallet, castURL, data.embedUrl, data.message, questId);
 
         await farcasterPost(`@${data.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}])
-        res.send({ success: true });
     }  catch(error) {
-        res.status(200).send({ success: false, error: error });
+        console.log(error);
     }
 });
 
