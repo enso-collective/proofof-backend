@@ -28,18 +28,13 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             
                 if (authClient.isAccessTokenExpired()) {
                     const newToken = await authClient.refreshAccessToken();
-                    await twitterSettingsCollection.doc('settings').set({ token: newToken.token });
+                    await twitterSettingsCollection.doc('settings').set({ token: newToken.token }, { merge: true });
                 }
         });
-
         const twitterSettings =  await twitterSettingsCollection.doc('settings').get();
         const twitterSettingsData = twitterSettings.data();
         const lastMentionTweetId = twitterSettingsData?.lastMentionTweetid;
         const token = twitterSettingsData?.token;
-
-        if (lastMentionTweetId === undefined) {
-            return;
-        }
 
         const authClient = new auth.OAuth2User({
             client_id: TWITTER_API_KEY!,
@@ -59,15 +54,8 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             return;
         }
 
-        if (newestId !== undefined && twitterSettingsData === undefined) {
-            const newTwitterSettings = {
-                lastMentionTweetid: newestId
-            };
-            await twitterSettingsCollection.doc('settings').set(newTwitterSettings);
-        } else if (newestId !== undefined) {
-            await twitterSettings.ref.update({
-                lastMentionTweetid: newestId
-            });
+        if (newestId !== undefined) {
+            await twitterSettingsCollection.doc('settings').set({ lastMentionTweetid: newestId }, { merge: true });
         }
 
         const userCollection = admin.firestore().collection('User');
@@ -79,6 +67,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
             if (element.referenced_tweets != null) { return; }
             
             const user = users.find(x => x.id === element.author_id);
+            console.log(`username: ${user?.username}`);
             const usersSnapshot = await userCollection.where('twitterUsername', '==', user?.username).get()
 
             if (usersSnapshot.empty) {
