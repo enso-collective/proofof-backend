@@ -55,6 +55,8 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
 
     let points = 100;
     const db = admin.firestore();
+    db.settings({ ignoreUndefinedProperties: true });
+
     try {
         const proofRef = db.collection('Proof').doc(); 
         const userSnapshot = await db.collection('User').where('userWallet', '==', attest_wallet).get();
