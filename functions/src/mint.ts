@@ -4,27 +4,29 @@ import * as admin from 'firebase-admin';
 
 export async function eas_mint(username: string, attest_wallet: string, post_url: string, post_image_link: string, post_content: string, quest_id: string) {
     //push to EAS either onchain or offchain. docs: https://docs.attest.sh/docs/tutorials/make-an-attestation
-    const provider = ethers.getDefaultProvider(
-        "base", {
-            alchemy: process.env.ALCHEMY_KEY
-        }
-    );
-    const privateKey = process.env.MINT_WALLET_PRIVATE_KEY
+    // BASE
+   // const provider = ethers.getDefaultProvider(
+    //    "base", {
+    //        alchemy: process.env.ALCHEMY_KEY
+    //    }
+    //);
+    // LUKSO
+    const provider = new ethers.JsonRpcProvider("https://42.rpc.thirdweb.com");
+    const privateKey = process.env.MINT_WALLET_PRIVATE_KEY_LUKSO
     if (!privateKey) {
         throw new Error('PRIVATE_KEY is not defined in the environment variables');
     }
     const signer = new ethers.Wallet(privateKey, provider);
-    const eas = new EAS("0x4200000000000000000000000000000000000021"); //https://docs.attest.sh/docs/quick--start/contracts#base
+    // BASE
+    //const eas = new EAS("0x4200000000000000000000000000000000000021"); // connects to Base
+    // LUKSO
+    const eas = new EAS("0xeC53F3F1ea61aE68067997b8f083A8a4B23E6EED");
     eas.connect(signer);
 
-    
-    //const nftStorageKey = process.env.NFTSTORAGE_API_KEY (is stored on Cloud Function already)
-    //const nftStorageURL = TODO upload image https://nft.storage/docs/client/js/#store---store-erc1155-nft-data
-    console.log("u- 1");
+
     const bytes32username = username.substring(0, 32);
     const bytes32quest = quest_id.substring(0, 32);;
     // Initialize SchemaEncoder with the schema string
-    console.log("u- 2");
     const schemaEncoder = new SchemaEncoder("bytes32 username,string postURL,string ipfsImageURL,string postContent,bytes32 questId");
     const encodedData = schemaEncoder.encodeData([
         { name: "username", value: bytes32username, type: "bytes32" }, 
@@ -33,8 +35,10 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
         { name: "postContent", value: post_content, type: "string" },
         { name: "questId", value: bytes32quest, type: "bytes32" },
     ]);
-    
-    const SchemaUID = "0x7f9aaf2fd9e8fc1682d8240fef5464093a60f127cb3661c863c7c621ab69af02";    
+    // BASE
+    //const SchemaUID = "0x7f9aaf2fd9e8fc1682d8240fef5464093a60f127cb3661c863c7c621ab69af02";    
+    // LUKSO
+    const SchemaUID = "0xeb9547819b10031db4cb4d23f2b86275b74d9e1ce7c0e552b86b46db52f70323"
 
     const tx = await eas.attest({
         schema: SchemaUID,
@@ -45,7 +49,6 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
         },
     });
 
-    console.log(tx);
     const newAttestationUID = await tx.wait();
     console.log("New attestation UID:", newAttestationUID);
     console.log(tx.tx.hash)

@@ -104,7 +104,10 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
 
             const tweetUrl = `https://twitter.com/${user?.username}/status/${newestId}`;
             const hash = await eas_mint(user?.username!, wallet, tweetUrl, photo.url!, element.text, questId);
-            await userClient.tweets.createTweet({ text: `@${user?.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, reply: { in_reply_to_tweet_id: element.id } });
+            //Base Tweet
+            //await userClient.tweets.createTweet({ text: `@${user?.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, reply: { in_reply_to_tweet_id: element.id } });
+            // LUKSO tweet
+            await userClient.tweets.createTweet({ text: `@${user?.username} your ${brandName} Proof is now onchain! View the transaction on LUKSO: https://explorer.execution.mainnet.lukso.network/tx/${hash}`, reply: { in_reply_to_tweet_id: element.id } }); 
         });
     } catch(error) {
         console.log(error);
