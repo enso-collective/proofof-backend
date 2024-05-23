@@ -78,7 +78,7 @@ export async function validateBrand(brandName: string, message: string, imageUrl
                 EXAMPLES:
                 - If the image has DESCRIPTION of the brand Ray-Ban, and there are no sunglasses visible in the image, then respond "NOT VALID - no Ray-Ban sunglasses visible".
                 - If the image has the claim of the brand Ray-Ban, and there are sunglasses visible in the image but hard to tell what brand they are, which could be because there is no brand label visible or the item is small, then respond with "VALID - Ray-Ban, sunglasses".
-                - If the DESCRIPTION says a swimsuit but the image contains a jacket, this would be "NOT VALID - image does not match description".`},
+                - If the DESCRIPTION says a swimsuit but the image contains a jacket, this would be "NOT VALID - image does not match description". `},
                 { type: 'image_url', image_url: { url: imageUrl } }
             ],
         }]
