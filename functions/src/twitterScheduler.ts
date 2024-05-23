@@ -161,7 +161,7 @@ export const twitterScheduler = onSchedule('* * * * *', async (event) => {
     
                 const tweetUrl = `https://twitter.com/${user?.username}/status/${newestMentionId}`;
                 const hash = await eas_mint(user?.username!, wallet, tweetUrl, photo.url!, element.text, questId);
-                await userClient.tweets.createTweet({ text: `@${user?.username} your ${brandName} Proof is now onchain! View the transaction on LUKSO: https://explorer.execution.mainnet.lukso.network/tx/${hash}`, reply: { in_reply_to_tweet_id: element.id } }); 
+                await userClient.tweets.createTweet({ text: `@${user?.username} your ${brandName} Proof is created! View your attestations at proofof.bot/profile`, reply: { in_reply_to_tweet_id: element.id } }); 
             });
         }
     } catch(error) {
