@@ -47,7 +47,6 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
             revocable: true,
             data: encodedData
         },
-        gasLimit: ethers.utils.hexlify(1000000) // Set a higher gas limit
     });
 
     const newAttestationUID = await tx.wait();
