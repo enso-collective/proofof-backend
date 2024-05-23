@@ -83,7 +83,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
                     proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                     userWallet: attest_wallet,
                     userWalletLower: attest_wallet.toLowerCase(),
-                    attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
+                    //attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                     points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });
             });
