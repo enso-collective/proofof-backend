@@ -68,7 +68,7 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
         const castURL = `https://warpcast.com/${data.username}/0x${data.hash.substring(2, 10)}`;
         const hash = await eas_mint(data.username, data.wallet, castURL, data.embedUrl, data.message, questId);
 
-        await farcasterPost(`@${data.username} your Proof:of:${brandName} is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}]);
+        await farcasterPost(`@${data.username} your Proof:of:${brandName} is created onchain! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}]);
     }  catch(error) {
         console.log(error);
     }
