@@ -32,18 +32,18 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
     // BASE schemaUID
     const SchemaUID = "0x7f9aaf2fd9e8fc1682d8240fef5464093a60f127cb3661c863c7c621ab69af02";    
 
-    // const tx = await eas.attest({
-    //     schema: SchemaUID,
-    //     data: {
-    //         recipient: attest_wallet,
-    //         revocable: true,
-    //         data: encodedData
-    //     },
-    // });
+    const tx = await eas.attest({
+        schema: SchemaUID,
+        data: {
+            recipient: attest_wallet,
+            revocable: true,
+            data: encodedData
+        },
+    });
 
-    // const newAttestationUID = await tx.wait();
-    // console.log("New attestation UID:", newAttestationUID);
-    // console.log(tx.tx.hash)
+    const newAttestationUID = await tx.wait();
+    console.log("New attestation UID:", newAttestationUID);
+    console.log(tx.tx.hash)
 
     let points = 100;
     const db = admin.firestore();
@@ -67,8 +67,8 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
                     postContent: post_content,
                     pointValue: points,
                     timestamp: Date.now(),
-                    //attestationUID: newAttestationUID,
-                    //transaction: tx.tx.hash,
+                    attestationUID: newAttestationUID,
+                    transaction: tx.tx.hash,
                     questId: quest_id,
                     image: true
                 });
@@ -76,7 +76,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
                     proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                     userWallet: attest_wallet,
                     userWalletLower: attest_wallet.toLowerCase(),
-                    //attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
+                    attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                     points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 };
                 if (incrementBuildersPoints) {
@@ -99,14 +99,14 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
                 postContent: post_content,
                 pointValue: points,
                 timestamp: Date.now(),
-                //attestationUID: newAttestationUID,
-                //transaction: tx.tx.hash,
+                attestationUID: newAttestationUID,
+                transaction: tx.tx.hash,
                 questId: quest_id,
                 image: true
             });
             const userData: any = {
                 proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
-                //attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
+                attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                 points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
             };
             if (incrementBuildersPoints) {
@@ -119,5 +119,5 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
     } catch (error) {
         console.error('Error writing to Firestore:', error);
     }
-return tx.tx.hash;
+    return tx.tx.hash;
 }
