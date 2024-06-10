@@ -30,13 +30,13 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
 
         if (data.wallet === undefined) {
             // reply in farcaster
-            await farcasterPost(`Please add a verified wallet in your profile settings and retry this cast to mint a Proof`, data.hash)
+            await farcasterPost(`Please add a verified wallet in your profile settings and retry this cast to mint a Proof:of attestation`, data.hash)
             return
         }
 
         if (data.embedUrl === undefined) {
             // reply in farcaster
-            await farcasterPost(`I didn't see an image attached to your cast @${data.username}, please retry a new cast with an image.`, data.hash)
+            await farcasterPost(`We didn't see an image attached to your cast @${data.username}, please retry a new cast with your photo/image.`, data.hash)
             return
         }
 
@@ -50,15 +50,16 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
 
         if (brandName === null) {
             // reply in farcaster
-            await farcasterPost(`We didn't find a clear brand or quest described in your cast @${data.username}. Please retry your cast with more specific description of the brand or quest hashtag.`, data.hash)
-            console.log('cannot extract brand name')
+            await farcasterPost(`We didn't find a clear brand or quest described in your cast @${data.username}. Please retry your cast with more specific description of the brand or quest hashtag.`, data.hash);
+            console.log('cannot extract brand name from text description');
             return
         }
 
         const brandValidation = await validateBrand(brandName, data.message, data.embedUrl!);
         if (brandValidation === null) {
             // reply in farcaster
-            await farcasterPost(`@${data.username} the AI analysis of your description & image determined it to be "${brandValidation}" for a Proof. Please try again with a different image or description.`, data.hash)
+            await farcasterPost(`@${data.username} the AI analysis of your description & image determined it to be "${brandValidation}" for a Proof. Please try again with a different image or description.`, data.hash);
+            console.log('AI image analysis determined it was: ', brandValidation);
             res.send({ success: false});
             return
         }
@@ -67,7 +68,7 @@ export const farcasterWebhook = functions.https.onRequest(async (req, res) => {
         const castURL = `https://warpcast.com/${data.username}/0x${data.hash.substring(2, 10)}`;
         const hash = await eas_mint(data.username, data.wallet, castURL, data.embedUrl, data.message, questId);
 
-        await farcasterPost(`@${data.username} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}])
+        await farcasterPost(`@${data.username} your Proof:of:${brandName} is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`, data.hash, [{url: `https://www.onceupon.gg/${hash}`}]);
     }  catch(error) {
         console.log(error);
     }
