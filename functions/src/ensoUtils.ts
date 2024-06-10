@@ -1,5 +1,5 @@
 export function determineQuestId(brandName: string) {
-    const questBrands = ["LUKSO", "TheBuildersDAO", "NOX Gallery", "Crowdmuse", "SheFi", "Linea", "Unlonely", "Capsule", "Phaver", "WalletConnect", "Harpie", "Paypal", "PYUSD", "Enso", "Hyperlane", "Base", "photobooth", "newfriend", "shefipanel"];
+    const questBrands = ["LUKSO", "TheBuildersDAO", "NOX", "Crowdmuse", "SheFi", "Linea", "Unlonely", "Capsule", "Phaver", "WalletConnect", "Harpie", "Paypal", "PYUSD", "Enso", "Hyperlane", "Base", "photobooth", "newfriend", "shefipanel"];
     let questId;
     const brandNameLower = brandName.toLowerCase();
 

@@ -52,6 +52,8 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
         const proofRef = db.collection('Proof').doc(); 
         const userSnapshot = await db.collection('User').where('userWallet', '==', attest_wallet).get();
 
+        const incrementBuildersPoints = (quest_id === "thebuildersdao" || quest_id === "nox");
+
         if (userSnapshot.empty) {
             const newUserRef = db.collection('User').doc(); // Create a new document reference for the new user
             console.log("u- 3");
@@ -70,13 +72,17 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
                     questId: quest_id,
                     image: true
                 });
-                t.set(newUserRef, {
+                const newUserData: any = {
                     proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                     userWallet: attest_wallet,
                     userWalletLower: attest_wallet.toLowerCase(),
                     attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                     points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
-                }, { merge: true });
+                };
+                if (incrementBuildersPoints) {
+                    newUserData.buildersPoints = admin.firestore.FieldValue.increment(points);
+                }
+                t.set(newUserRef, newUserData, { merge: true });
             });
     } else {
         // Found a user with the matching attest_wallet
@@ -98,15 +104,20 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
                 questId: quest_id,
                 image: true
             });
-            t.set(userRef, {
+            const userData: any = {
                 proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                 attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
                 points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
-                }, { merge: true });
+            };
+            if (incrementBuildersPoints) {
+                userData.buildersPoints = admin.firestore.FieldValue.increment(points);
+            }
+            t.set(userRef, userData, { merge: true });
             });
+
         } 
     } catch (error) {
         console.error('Error writing to Firestore:', error);
     }
-    return tx.tx.hash;
+return tx.tx.hash;
 }
