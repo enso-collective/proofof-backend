@@ -10,6 +10,12 @@ const farcasterWebhookInput = z.object({
   wallet: z.string().optional(),
 });
 
+const lensWebhookInput = z.object({
+  key: z.string(),
+  publicationId: z.string(),
+  profileId: z.string()
+});
+
 const attestationInput = z.object({
   key: z.string(),
   quest: z.string(),
@@ -65,5 +71,6 @@ export {
   poapInput,
   validationInput,
   internalMintInput,
-  internalMintNotesInput
+  internalMintNotesInput,
+  lensWebhookInput
 };
