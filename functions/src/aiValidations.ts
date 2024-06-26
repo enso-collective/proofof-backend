@@ -45,7 +45,7 @@ export async function extractBrand(message: string) {
     console.log("Extracted brand name:", brandNameFromAi); // Log the extracted brand name
 
 
-    if (typeof brandNameFromAi !== 'string' || (typeof brandNameFromAi === 'string' && brandNameFromAi.trim().length == 0)) {
+    if (typeof brandNameFromAi !== 'string' || (typeof brandNameFromAi === 'string' && brandNameFromAi.trim().length == 0) || brandNameFromAi === 'Not') {
         return null;
     }
 
