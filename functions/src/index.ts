@@ -14,6 +14,6 @@ export { validationWebhook } from './validationWebhook'
 export { internalMintWebhook } from './internalMintWebhook'
 export { internalMintNotesWebhook } from './internalMintNotesWebhook'
 
-// export { lensAuth } from './lensWebhook'
+export { lensAuth } from './lensWebhook'
 export { lensWebhook } from './lensWebhook'
 export { lensTestWebhook } from './lensWebhook'
