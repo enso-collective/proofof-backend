@@ -79,7 +79,7 @@ export const lensWebhook = functions.https.onRequest(async (req, res) => {
 
     const pub = publication as PostFragment;
     if (pub.metadata.__typename !== 'ImageMetadataV3') {
-      lensComment(data.publicationId, `I didn't see an image attached to your cast @${handle}, please retry a new cast with an image.`);
+      lensComment(data.publicationId, `I didn't see an image attached to your publication @${handle}, please retry a new publication with an image.`);
       return;
     }
     
@@ -88,7 +88,7 @@ export const lensWebhook = functions.https.onRequest(async (req, res) => {
     const brandName = await extractBrand(meta.content);
 
     if (brandName === null) {
-      lensComment(data.publicationId, `We didn't find a clear brand or quest described in your cast @${handle}. Please retry your publication with more specific description of the brand or quest hashtag.`);
+      lensComment(data.publicationId, `We didn't find a clear brand or quest described in your publication @${handle}. Please retry your publication with more specific description of the brand or quest hashtag.`);
       console.log('Cannot extract brand name');
       return
     }
