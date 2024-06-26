@@ -17,7 +17,9 @@
   "dependencies": {
     "@airstack/node": "^0.0.5",
     "@ethereum-attestation-service/eas-sdk": "^1.4.2",
+    "@irys/sdk": "^0.2.5",
     "@lens-protocol/client": "^2.0.0-alpha.34",
+    "@lens-protocol/metadata": "^1.2.0",
     "@neynar/nodejs-sdk": "^1.10.0",
     "auth0": "^3.6.0",
     "axios": "^1.6.1",
@@ -26,9 +28,7 @@
     "firebase-functions": "^3.18.0",
     "openai": "^4.28.0",
     "twitter-api-sdk": "^1.2.1",
-    "zod": "^3.22.4",
-    "@lens-protocol/metadata": "^1.2.0",
-    "@pinata/sdk": "^2.1.0"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/auth0": "^3.3.3",

@@ -7,12 +7,17 @@ import { validateBrand, extractBrand } from './aiValidations'
 import { determineQuestId } from './ensoUtils'
 import { eas_mint } from './mint'
 import { textOnly } from '@lens-protocol/metadata'
-import PinataSDK from '@pinata/sdk'
+import Irys from "@irys/sdk";
 
 const WALLET_PRIVATE_KEY = process.env.WALLET_PRIVATE_KEY as string;
 const PROFILE_ID = process.env.PROFILE_ID;
+const WALLET_PRIVATE = process.env.MINT_WALLET_PRIVATE_KEY
 
-let pinataClient = new PinataSDK({ pinataApiKey: '32f196b95bef76b93fc1', pinataSecretApiKey: '487b382ea6e3d464cdae8344aa849b9c82700f1670408245f9876013a664387a' });
+const irys = new Irys({
+  network: 'mainnet',
+  token: 'base-eth',
+  key: WALLET_PRIVATE,
+});
 
 class FirebaseLensStorageProvider implements IStorageProvider {
   readonly collection = admin.firestore().collection('lensAuth');
@@ -63,6 +68,8 @@ export const lensWebhook = functions.https.onRequest(async (req, res) => {
     const profile = await lensClient.profile.fetch({ forProfileId: data.profileId })
     const handle = profile?.handle?.fullHandle
     const ownedBy = profile?.handle?.ownedBy
+
+    console.log(`handle: ${handle}`);
 
     const publication = await lensClient.publication.fetch({ forId: data.publicationId });
 
@@ -121,15 +128,19 @@ export const lensAuth = functions.https.onRequest(async (req, res) => {
 });
 
 const lensComment = async (on: string, text: string) => {
-  const textMetadata = textOnly({ content: text });
-  const response = await pinataClient.pinJSONToIPFS(textMetadata);
-  await lensCommentSend(on, `ipfs://${response.IpfsHash}`);
-}
-
-const lensCommentSend = async (on: string, uri: string) => {
   try {
-    lensClient.publication.commentOnMomoka({ commentOn: on, contentURI: uri });
-  } catch {
-    setTimeout(async function() { await lensComment(on, uri); }, 10000);
+    const textMetadata = JSON.stringify(textOnly({ content: text }));
+
+    // const price = await irys.getPrice(new Blob([textMetadata]).size);
+    // await irys.fund(price);
+
+    const tx = await irys.upload(textMetadata, {
+      tags: [{ name: "Content-Type", value: "application/json" }],
+    });
+
+    console.log(`sending comment: https://gateway.irys.xyz/${tx.id}`)
+    await lensClient.publication.commentOnMomoka({ commentOn: on, contentURI: `https://gateway.irys.xyz/${tx.id}` });
+  } catch (e) {
+    console.log("error commenting ", e);
   }
 }
