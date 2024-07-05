@@ -4,12 +4,12 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 function checkBrandPresence(inputString: string) {
     // Check for 'thebuildersdao' case-insensitively
-    if (/thebuildersdao/i.test(inputString)) {
-        return "TheBuildersDao";
+    if (/shefi/i.test(inputString)) {
+        return "SheFi";
     }
     // Check for 'nox gallery' or '@noxgallery' case-insensitively
-    else if (/nox gallery|@noxgallery/i.test(inputString)) {
-        return "NOXGallery";
+    else if (/lens/i.test(inputString)) {
+        return "Lens Protocol";
     }
     // Return null if none of the conditions are met
     return null;
@@ -18,7 +18,7 @@ function checkBrandPresence(inputString: string) {
 export async function extractBrand(message: string) {
     const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
     const brandName = checkBrandPresence(message);
-    console.log("The brand name from message:", brandName); // Log the brand name
+   console.log("The brand name from message:", brandName); // Log the brand name
 
      // Check if the result from checkBrandPresence is not null
      if (brandName !== null) {
@@ -29,15 +29,15 @@ export async function extractBrand(message: string) {
         messages: [
         { 
             role: 'system', 
-            content: `You are an expert in extracting the brand name in a string of text. A user submitted text content which relates to an image, which should contain a primary brand name, or describe a moment in their life they are taking a picture of. Without seeing the image, your job is to choose the primary brand they are describing. It may be a short word, such as "NOX" or "TheBuildersDAO", which is ok. Note: there are some new brand names to learn: TheBuildersDAO, NOX, SheFi, NFC Lisbon, Consensys, Crowdmuse. It is likely that if a word is capitalized it is the Brand name. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike (describing the shefi brand or nike brand). It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. If you see @proofof, that is a special tag and is not the brandname. If the text contains @TheBuildersDao or #ProofofBuilders then the brand is TheBuildersDao. If both TheBuildersDao and Nox are mentioned, then choose TheBuildersDao.`
+            content: `You are an expert in extracting the brand name in a string of text. A user submitted text content which relates to an image, which should contain a primary brand name, or describe a moment in their life they are taking a picture of. Without seeing the image, your job is to choose the primary brand they are describing. It may be a short word, such as "SheFi" or "Lens", which is ok. Note: there are some new brand names to learn: SheFi, Lens Protocol, Linea, Consensys, Crowdmuse. It is likely that if a word is capitalized it is the Brand name. The brand name could be referred to by a mention using the @ decorator, such as @shefi or @nike (describing the shefi brand or nike brand). It could be in a hashtag, such as #happySheFi, or with a / in front such as /shefi. If you see @0xproofof or @proofof, that is a special tag and is not the brandname.`
         }, 
         {
             role: 'user',
-            content: `A user supplied the following description which is meant to contain a brand name. You are an expert in choosing the primary brand they are describing and return the name of it. If the choice of brand is unsure then return an an empty response. If they say "[BRAND] at a [PLACE]" then choose the [BRAND]. If the text contains @TheBuildersDao or #ProofofBuilders then the brand is TheBuildersDao.
-            User description: ${message}
-            Return the brandname, or "Not"`
+            content: `A user supplied the following text which may contain a brand name. You are an expert in choosing the primary brand they are describing and return the name of it. If the choice of brand is unsure then return an an empty response. If they say "[BRAND] at a [PLACE]" then choose the [BRAND]. 
+            User text: ${message}
+            Return the primary brand name detected, or the empty string.`
         }],
-        model: 'gpt-4-turbo',
+        model: 'gpt-4o',
         max_tokens: 500
     });
 
@@ -59,7 +59,7 @@ export async function validateBrand(brandName: string, message: string, imageUrl
     const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
     const validateBrandQuery = await openai.chat.completions.create({
-        model: 'gpt-4-turbo',
+        model: 'gpt-4o',
         messages: [{ 
             role: 'user', 
             content: [ 
@@ -70,11 +70,10 @@ export async function validateBrand(brandName: string, message: string, imageUrl
                 For this IMAGE, think through what is the full list of every piece of clothing, artwork, apparel, text, visible signage, logos, and items in the image.
                 
                 Some Special new Brands to note:
-                - NOX - also called NOX Gallery, it can be paintings, artwork, digital images, stickers, shirts. 
-                - TheBuildersDao - has shiny stickers that say BLDRS or WEB3 IS BUILT IRL or THE BUILDERS DAO. If you see those then this is the BRAND to choose. Also could be posters, or clothing, at an art gallery, or photos, artwork, paintings. They are working with these artists, who may or may not be mentioned with an image of a work of art: Tormius, Lele Gastini, Fabiola Sangineto, The Social Trauma, Amastasia, Stijn Stragier, Cotama, RedruM, Flavio Acri, Cotama, Caperucita la más roja, Yukari YAMINO, Samanta, BloomingVisions, Nadobroart, Anna Dart, Roger Haus, mochataro. If any of those names are mentioned, reply with "VALID - TheBuildersDAO". If the photo is of an art gallery, it is likely TheBuildersDao.
                 - the SheFi brand has a logo that says SheFi and has products such as blue bucket hats, beanies, and shirts.
-                - Crowdmuse
-                - Web3District
+                - Lens Protocol has green / white / colorful clothing, and the logo is a leaf-shape with a face on it. 
+                - Linea
+                - Harpie
                 
                 You need to answer TRUE or FALSE to each of the two following questions:
                 1) Is the user's DESCRIPTION of the IMAGE generally correct, and without any false statements? For example, if they describe a swimsuit but the image contains a man in a business suit, this would be FALSE.

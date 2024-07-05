@@ -69,7 +69,7 @@ export async function webhook_mint(attest_wallet: string, company: string, quest
                     userWallet: attest_wallet,
                     userWalletLower: attest_wallet.toLowerCase(),
                     attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
-                    points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
+                    shefiPoints: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });
             });
     } else {
@@ -92,7 +92,7 @@ export async function webhook_mint(attest_wallet: string, company: string, quest
             t.set(userRef, {
                 proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                 attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
-                points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
+                shefiPoints: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });
             });
         } 

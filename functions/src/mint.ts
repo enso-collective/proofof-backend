@@ -45,7 +45,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
     console.log("New attestation UID:", newAttestationUID);
     console.log(tx.tx.hash)
 
-    let points = 100;
+    let points = 10;
     const db = admin.firestore();
 
     try {
@@ -77,7 +77,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
                     userWallet: attest_wallet,
                     userWalletLower: attest_wallet.toLowerCase(),
                     attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
-                    points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
+                    shefiPoints: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 };
                 if (incrementBuildersPoints) {
                     newUserData.buildersPoints = admin.firestore.FieldValue.increment(points);
@@ -107,7 +107,7 @@ export async function eas_mint(username: string, attest_wallet: string, post_url
             const userData: any = {
                 proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                 attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
-                points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
+                shefiPoints: admin.firestore.FieldValue.increment(points) // Increment the user's point value
             };
             if (incrementBuildersPoints) {
                 userData.buildersPoints = admin.firestore.FieldValue.increment(points);

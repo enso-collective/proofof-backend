@@ -104,7 +104,7 @@ export const lensWebhook = functions.https.onRequest(async (req, res) => {
     const pubURL = `https://hey.xyz/posts/${data.publicationId}`;
     const hash = await eas_mint(handle!, ownedBy!, pubURL, imageUrl, meta.content, questId);
 
-    lensComment(data.publicationId, `@${handle} your ${brandName} Proof is minted! View the transaction on Base: https://www.onceupon.gg/${hash}`);
+    lensComment(data.publicationId, `@${handle} your ${brandName} Proof is minted! View the transaction: https://www.onceupon.gg/${hash}`);
   }  catch(error) {
     console.log(error);
   }
