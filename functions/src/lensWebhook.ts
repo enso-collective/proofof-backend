@@ -128,19 +128,26 @@ export const lensAuth = functions.https.onRequest(async (req, res) => {
 });
 
 const lensComment = async (on: string, text: string) => {
+  let id = "";
   try {
-    const textMetadata = JSON.stringify(textOnly({ content: text }));
+    id = await createMetadata(text)
+  } catch {
+    id = await createMetadata(text)
+  }
 
-    // const price = await irys.getPrice(new Blob([textMetadata]).size);
-    // await irys.fund(price);
-
-    const tx = await irys.upload(textMetadata, {
-      tags: [{ name: "Content-Type", value: "application/json" }],
-    });
-
-    console.log(`sending comment: https://gateway.irys.xyz/${tx.id}`)
-    await lensClient.publication.commentOnMomoka({ commentOn: on, contentURI: `https://gateway.irys.xyz/${tx.id}` });
+  try {
+    console.log(`sending comment: https://gateway.irys.xyz/${id}`)
+    await lensClient.publication.commentOnMomoka({ commentOn: on, contentURI: `https://gateway.irys.xyz/${id}` });
   } catch (e) {
     console.log("error commenting ", e);
   }
+}
+
+const createMetadata = async (text: string) => {
+  const textMetadata = JSON.stringify(textOnly({ content: text }));
+  const tx = await irys.upload(textMetadata, {
+    tags: [{ name: "Content-Type", value: "application/json" }],
+  });
+
+  return tx.id;
 }
