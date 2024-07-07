@@ -63,8 +63,6 @@ export const lensWebhook = functions.https.onRequest(async (req, res) => {
         return;
     }
 
-    res.sendStatus(200);
-
     const profile = await lensClient.profile.fetch({ forProfileId: data.profileId })
     const handle = profile?.handle?.fullHandle
     const ownedBy = profile?.handle?.ownedBy
@@ -74,12 +72,14 @@ export const lensWebhook = functions.https.onRequest(async (req, res) => {
     const publication = await lensClient.publication.fetch({ forId: data.publicationId });
 
     if (publication?.__typename !== 'Post') {
+      res.sendStatus(200);
       return;
     }
 
     const pub = publication as PostFragment;
     if (pub.metadata.__typename !== 'ImageMetadataV3') {
       lensComment(data.publicationId, `I didn't see an image attached to your publication @${handle}, please retry a new publication with an image.`);
+      res.sendStatus(200);
       return;
     }
     
@@ -90,6 +90,7 @@ export const lensWebhook = functions.https.onRequest(async (req, res) => {
     if (brandName === null) {
       lensComment(data.publicationId, `We didn't find a clear brand or quest described in your publication @${handle}. Please retry your publication with more specific description of the brand or quest hashtag.`);
       console.log('Cannot extract brand name');
+      res.sendStatus(200);
       return
     }
 
@@ -97,6 +98,7 @@ export const lensWebhook = functions.https.onRequest(async (req, res) => {
     const brandValidation = await validateBrand(brandName, meta.content, meta.asset.image.optimized?.uri!);
     if (brandValidation === null) {
       lensComment(data.publicationId, `@${handle} the AI analysis of your description & image determined it to be "${brandValidation}" for a Proof. Please try again with a different image or description.`);
+      res.sendStatus(200);
       return;
     }
 
@@ -108,6 +110,7 @@ export const lensWebhook = functions.https.onRequest(async (req, res) => {
   }  catch(error) {
     console.log(error);
   }
+  res.sendStatus(200);
 });
 
 export const lensTestWebhook = functions.https.onRequest(async (req, res) => {
