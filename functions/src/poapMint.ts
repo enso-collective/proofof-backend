@@ -36,7 +36,7 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
         },
     });
 
-    const points = 5;
+    const points = 10;
 
     const newAttestationUID = await tx.wait();
     console.log("New attestation UID:", newAttestationUID);
@@ -66,7 +66,7 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
                     userWallet: attest_wallet,
                     userWalletLower: attest_wallet.toLowerCase(),
                     attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
-                    points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
+                    shefiPoints: admin.firestore.FieldValue.increment(points) // Increment the user's point value
                 }, { merge: true });
             });
     } else {
@@ -88,8 +88,8 @@ export async function poap_mint(attest_wallet: string, poap_id: string, poap_nam
             t.set(userRef, {
                 proofs: admin.firestore.FieldValue.arrayUnion(proofRef.id),
                 attestationUID: admin.firestore.FieldValue.arrayUnion(newAttestationUID),
-                points: admin.firestore.FieldValue.increment(points) // Increment the user's point value
-                }, { merge: true });
+                shefiPoints: admin.firestore.FieldValue.increment(points) // Increment the user's point value
+            }, { merge: true });
             });
         } 
     } catch (error) {

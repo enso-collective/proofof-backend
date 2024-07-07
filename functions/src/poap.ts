@@ -56,8 +56,13 @@ export const attest_poap = functions.https.onRequest(async (req, res) => {
             after: null // Cursor for the next page
         };
     let result = await fetchQueryWithPagination(query, variables);
+    
             for (const poap of result.data.Poaps.Poap) {
                 const userWallet = poap.owner.addresses[0];
+                if (userWallet == "0x9e4c75c1cf733be6d5eb979b5f804b3dbd4dfff5") {
+                    console.log("Skipping Maggie's wallet");
+                    return;
+                }
                 console.log(userWallet);
                 //check if wallet already has EAS for the poapID
                 const db = admin.firestore();
