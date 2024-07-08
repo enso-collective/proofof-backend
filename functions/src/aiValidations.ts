@@ -3,15 +3,13 @@ import OpenAI from 'openai';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 function checkBrandPresence(inputString: string) {
-    // Check for 'thebuildersdao' case-insensitively
-    if (/shefi/i.test(inputString)) {
-        return "SheFi";
+    const brandNames = ['lens', 'lens protocol', 'afk', 'brussels', 'orb', 'proofof', 'fitcheck', 'bonsai', 'zksync'];
+    const regex = new RegExp(brandNames.join('|'), 'i');
+
+    if (regex.test(inputString)) {
+        return "Lens";
     }
-    // Check for 'nox gallery' or '@noxgallery' case-insensitively
-    else if (/lens/i.test(inputString)) {
-        return "Lens Protocol";
-    }
-    // Return null if none of the conditions are met
+
     return null;
 }
 
@@ -98,7 +96,7 @@ export async function validateBrand(brandName: string, message: string, imageUrl
     if (typeof brandValidation !== 'string' || (typeof brandValidation === 'string' && brandValidation.includes('NOT VALID'))) {
         return null;
     }
-    console.log("Brand validation result:", brandValidation); 
+    console.log("Brand validation result: ", brandValidation); 
     return brandValidation;
 
 }
