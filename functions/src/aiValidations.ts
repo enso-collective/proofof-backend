@@ -61,7 +61,7 @@ export async function validateBrand(brandName: string, message: string, imageUrl
         messages: [{ 
             role: 'user', 
             content: [ 
-                { type: 'text', text: `You are an expert in analyzing photos and images, and extracting the content and any text visible. A different user submitted an IMAGE with a DESCRIPTION. The DESCRIPTION may mention a BRAND "${brandName}" that they claim is visible in the IMAGE. Your task is to determine whether the user's claim is true and therefore VALID, or not true and so therefore NOT VALID. You may not recognize the Brand name or the logos, as they are very new brands. If so, learn the new brand.
+                { type: 'text', text: `You are an expert in analyzing photos and images, and extracting the content and any text visible. A different user submitted an IMAGE with a DESCRIPTION. The DESCRIPTION may mention a BRAND "${brandName}" that they claim is visible in the IMAGE.
 
                 Here is the original user DESCRIPTION: "${message}"
                 
@@ -70,23 +70,10 @@ export async function validateBrand(brandName: string, message: string, imageUrl
                 Some Special new Brands to note:
                 - the SheFi brand has a logo that says SheFi and has products such as blue bucket hats, beanies, and shirts.
                 - Lens Protocol has green / white / colorful clothing, and the logo is a leaf-shape with a face on it. 
-                - Linea
-                - Harpie
                 
-                You need to answer TRUE or FALSE to each of the two following questions:
-                1) Is the user's DESCRIPTION of the IMAGE generally correct, and without any false statements? For example, if they describe a swimsuit but the image contains a man in a business suit, this would be FALSE.
-                2) Is the BRAND "${brandName}" name or logo visible and present in the image? Note: If the brand name or logo is not directly visible or legible, but it could plausibly be correct based on the type of items, clothing, artwork or location setting, then trust the user and answer TRUE.
-                
-                Your response should be one of the two options:
-                1. "NOT VALID - [reason]"
-                2. "VALID - [the brand name you extracted]"
-                
-                Substitute the appropriate responses into the brackets. Respond with NOT VALID if the brand listed is definitely not in the image, because of [reason].
-                
-                EXAMPLES:
-                - If the image has DESCRIPTION of the brand Ray-Ban, and there are no sunglasses visible in the image, then respond "NOT VALID - no Ray-Ban sunglasses visible".
-                - If the image has the claim of the brand Ray-Ban, and there are sunglasses visible in the image but hard to tell what brand they are, which could be because there is no brand label visible or the item is small, then respond with "VALID - Ray-Ban".
-                - If the DESCRIPTION says a swimsuit but the image contains a jacket, this would be "NOT VALID - image does not match description".`},
+                Your response should be in this format:
+                2. "VALID - [the brand name from the user's description]"`},
+
                 { type: 'image_url', image_url: { url: imageUrl } }
             ],
         }]
