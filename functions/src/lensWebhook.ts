@@ -9,6 +9,8 @@ import { eas_mint } from './mint'
 import { textOnly } from '@lens-protocol/metadata'
 import Irys from "@irys/sdk";
 
+
+
 const WALLET_PRIVATE_KEY = process.env.WALLET_PRIVATE_KEY as string;
 const PROFILE_ID = process.env.PROFILE_ID;
 const WALLET_PRIVATE = process.env.MINT_WALLET_PRIVATE_KEY
@@ -67,7 +69,34 @@ export const lensWebhook = functions.https.onRequest(async (req, res) => {
     const handle = profile?.handle?.fullHandle
     const ownedBy = profile?.handle?.ownedBy
 
+
     console.log(`handle: ${handle}`);
+
+    
+      if (handle && ownedBy) {
+        try {
+          const ownedByMod = ownedBy.toLowerCase().trim();
+        const usersCollection = admin.firestore().collection('User');
+        let querySnapshot = await usersCollection.where('userWallet', '==', ownedByMod).get();
+        if(querySnapshot.empty){
+          querySnapshot = await usersCollection.where('userWalletLower', '==', ownedByMod).get();
+        }
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+         if(userDoc){
+          await userDoc.ref.update({
+            lensHandle: handle
+          });
+          
+          console.log(`Updated lensHandle for user with wallet: ${ownedBy}`);
+         }
+        } 
+        } catch (error) {
+          console.error(error)
+        }
+      }
+    
+   
 
     const publication = await lensClient.publication.fetch({ forId: data.publicationId });
 
