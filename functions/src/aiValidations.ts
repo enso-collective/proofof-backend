@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 function checkBrandPresence(inputString: string) {
-    const brandNames = ['lens', 'lens protocol', 'afk', 'brussels', 'orb', 'proofof', 'fitcheck', 'bonsai', 'zksync'];
+    const brandNames = ['lens', 'lens protocol', 'afk', 'brussels', 'raave', 'orb', 'proofof', 'fitcheck', 'bonsai', 'zksync'];
     const regex = new RegExp(brandNames.join('|'), 'i');
 
     if (regex.test(inputString)) {
