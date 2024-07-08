@@ -106,7 +106,7 @@ export const lensWebhook = functions.https.onRequest(async (req, res) => {
     const pubURL = `https://hey.xyz/posts/${data.publicationId}`;
     const hash = await eas_mint(handle!, ownedBy!, pubURL, imageUrl, meta.content, questId);
 
-    lensComment(data.publicationId, `@${handle} your Proof:of ${brandName} afk Brussels Proof:of is minted! View the attestation: https://www.onceupon.gg/${hash} and view the leaderboard & gallery: proofof.bot/events/afk`);
+    lensComment(data.publicationId, `@${handle} your Proof:of ${brandName} afk Brussels is minted! View the attestation: https://www.onceupon.gg/${hash} and view the leaderboard & gallery: proofof.bot/events/afk`);
   }  catch(error) {
     console.log(error);
   }
